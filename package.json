@@ -4,6 +4,7 @@
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.3",
     "react-hook-form": "^7.54.2",
+    "react-modal": "^3.16.3",
     "react-router-dom": "^7.1.5",
     "vite": "^6.1.0"
   }

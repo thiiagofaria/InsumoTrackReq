@@ -9,6 +9,7 @@ const CreateRequisicao = () => {
   // ======================
   // 1) Estados gerais
   // ======================
+  const [nomeObra, setNomeObra] = useState("");
 
   const [novaRequisicaoCriada, setNovaRequisicaoCriada] = useState(null);
   const [mostrarResumo, setMostrarResumo] = useState(false);
@@ -32,7 +33,8 @@ const CreateRequisicao = () => {
   const [descricaoSelecionada, setDescricaoSelecionada] = useState("");
 
   const [unidades, setUnidades] = useState([]);
-  const [unidadeSelecionada, setUnidadeSelecionada] = useState("");
+  const [unidadeSelecionada, setUnidadeSelecionada] = useState(null);
+
 
   const [empresas, setEmpresas] = useState([]);
   const [empresaSelecionada, setEmpresaSelecionada] = useState("");
@@ -124,6 +126,27 @@ const CreateRequisicao = () => {
   // ========================================================
   // A) Efeitos para buscar dados (Obras, Classificações etc.)
   // ========================================================
+
+  useEffect(() => {
+    if (!obraSelecionada) return;
+  
+    fetch(`http://127.0.0.1:8000/obras/${obraSelecionada}`)
+      .then((res) => {
+        if (!res.ok) {
+          console.warn("Não encontrou a obra. Status:", res.status);
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data) setNomeObra(data.nome);
+      })
+      .catch((err) => {
+        console.error("Erro ao buscar a obra:", err);
+        setNomeObra("Erro ao carregar");
+      });
+  }, [obraSelecionada]); 
+
 
   // 2) Buscar subgrupos1
   useEffect(() => {
@@ -232,23 +255,27 @@ const CreateRequisicao = () => {
 
   // 7) Buscar unidades
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/gerencial/unidades")
-      .then((res) => {
-        if (!res.ok) {
-          console.warn("Erro ao buscar unidades. Status:", res.status);
-          setUnidades([]);
-          return null;
-        }
-        return res.json();
-      })
+    if (!descricaoSelecionada) {
+        setUnidadeSelecionada(null); // Reseta quando a descrição não está selecionada
+        return;
+    }
+
+    fetch(`http://127.0.0.1:8000/gerencial/unidades/${obraSelecionada}/${classificacao1Selecionada}/${classificacao2Selecionada}/${classificacao3Selecionada}/${servicoSelecionado}/${descricaoSelecionada}`)
+      .then((res) => res.json())
       .then((data) => {
-        if (data) setUnidades(data);
+        if (data && data.length > 0) {
+          setUnidadeSelecionada(data[0]); // Como é apenas 1 unidade, pegamos o primeiro item da lista
+        } else {
+          setUnidadeSelecionada("Não disponível"); // Caso não tenha unidade associada
+        }
       })
       .catch((err) => {
-        console.error("Erro ao buscar unidades:", err);
-        setUnidades([]);
+        console.error("Erro ao buscar unidade:", err);
+        setUnidadeSelecionada("Erro ao carregar");
       });
-  }, []);
+}, [descricaoSelecionada, obraSelecionada, classificacao1Selecionada, classificacao2Selecionada, classificacao3Selecionada, servicoSelecionado]);
+
+
 
   // 8) Buscar empresas
   useEffect(() => {
@@ -508,7 +535,9 @@ const CreateRequisicao = () => {
   // Aqui continua o return original do formulário
   return (
     <div style={containerStyle}>
-      <h1 style={{ textAlign: "center", marginBottom: "1rem" }}>Nova Requisição</h1>
+      <h1 style={{ textAlign: "center", marginBottom: "1rem" }}>
+        Nova Requisição {nomeObra ? `- ${nomeObra}` : ""}
+      </h1>
       
       {/* 1) Form para adicionar itens */}
       <div style={cardStyle}>
@@ -604,19 +633,20 @@ const CreateRequisicao = () => {
   
             <div style={labelContainerStyle}>
               <label>Unidade:</label>
-              <select
-                value={unidadeSelecionada}
-                onChange={(e) => setUnidadeSelecionada(e.target.value)}
-                style={inputStyle}
-              >
-                <option value="">Selecione...</option>
-                {unidades.map((un, idx) => (
-                  <option key={idx} value={un}>
-                    {un}
-                  </option>
-                ))}
-              </select>
+              <div style={{
+                padding: "4px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                backgroundColor: "#f8f8f8",
+                minHeight: "14px",
+                display: "flex",
+                alignItems: "center",
+                paddingLeft: "5px"
+              }}>
+                {unidadeSelecionada || " "}
+              </div>
             </div>
+
   
             <div style={labelContainerStyle}>
               <label>Quantidade:</label>

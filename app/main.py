@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import gerencial, requisicao, empresas, locais_aplicacao, auth, usuarios  # Importamos os módulos de rota
+from app.routes import gerencial, requisicao, empresas, locais_aplicacao, auth, usuarios, obras  # Importamos os módulos de rota
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -12,6 +12,7 @@ app.include_router(empresas.router)
 app.include_router(locais_aplicacao.router)
 app.include_router(auth.router)
 app.include_router(usuarios.router)
+app.include_router(obras.router)
 
 # ✅ Rota principal (opcional)
 @app.get("/")

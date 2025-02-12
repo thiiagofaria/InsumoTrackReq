@@ -107,12 +107,21 @@ def listar_descricoes(codigo_projeto: str, subgrupo1: str, subgrupo2: str, subgr
 # ====================================================
 # 7) Listar Unidades de medida
 # ====================================================
-@router.get("/unidades", response_model=List[str])
-def listar_unidades_medida(db: Session = Depends(get_db)):
-    unidades = db.query(models.GerencialObra.unidade_medida).distinct().all()
+@router.get("/unidades/{codigo_projeto}/{subgrupo1}/{subgrupo2}/{subgrupo3}/{servico}/{descricao}", response_model=List[str])
+def listar_unidades(
+    codigo_projeto: str, subgrupo1: str, subgrupo2: str, subgrupo3: str, servico: str, descricao: str, db: Session = Depends(get_db)
+):
+    unidades = db.query(models.GerencialObra.unidade_medida).filter(
+        models.GerencialObra.codigo_projeto == codigo_projeto,
+        models.GerencialObra.subgrupo_1 == subgrupo1,
+        models.GerencialObra.subgrupo_2 == subgrupo2,
+        models.GerencialObra.subgrupo_3 == subgrupo3,
+        models.GerencialObra.servico == servico,
+        models.GerencialObra.descricao == descricao
+    ).distinct().all()
     
     if not unidades:
-        raise HTTPException(status_code=404, detail="Nenhuma unidade de medida encontrada")
+        return []  # Retorna uma lista vazia se não houver resultados
     
     return [unidade.unidade_medida for unidade in unidades]
 
