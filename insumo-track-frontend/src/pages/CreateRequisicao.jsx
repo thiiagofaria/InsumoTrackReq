@@ -7,63 +7,53 @@ const CreateRequisicao = () => {
   console.log("Usuário autenticado:", user);
 
   // ======================
-  // 1) Estados gerais
+  // Estados Gerais
   // ======================
   const [nomeObra, setNomeObra] = useState("");
-
   const [novaRequisicaoCriada, setNovaRequisicaoCriada] = useState(null);
   const [mostrarResumo, setMostrarResumo] = useState(false);
 
-  const [obras, setObras] = useState([]);
+  // Obra selecionada (fixado com o código do projeto do usuário)
   const [obraSelecionada, setObraSelecionada] = useState(user?.codigo_projeto || "");
+  
+  // Valor fixo para Classif. 1 (não exibido)
+  const classificacaoFixa = "CUSTOS DIRETOS DA OBRA";
 
-  const [classificacoes1, setClassificacoes1] = useState([]);
-  const [classificacao1Selecionada, setClassificacao1Selecionada] = useState("");
-
-  const [classificacoes2, setClassificacoes2] = useState([]);
+  // Seção Classificação
+  const [classificacoes2, setClassificacoes2] = useState([]); // "Selecione o grupo de serviço"
   const [classificacao2Selecionada, setClassificacao2Selecionada] = useState("");
-
-  const [classificacoes3, setClassificacoes3] = useState([]);
-  const [classificacao3Selecionada, setClassificacao3Selecionada] = useState("");
-
-  const [servicos, setServicos] = useState([]);
-  const [servicoSelecionado, setServicoSelecionado] = useState("");
-
-  const [descricoes, setDescricoes] = useState([]);
-  const [descricaoSelecionada, setDescricaoSelecionada] = useState("");
-
-  const [unidades, setUnidades] = useState([]);
-  const [unidadeSelecionada, setUnidadeSelecionada] = useState(null);
-
-
+  
   const [empresas, setEmpresas] = useState([]);
   const [empresaSelecionada, setEmpresaSelecionada] = useState("");
-
+  
   const [locais, setLocais] = useState([]);
   const [localSelecionado, setLocalSelecionado] = useState("");
-
-  const [quantidade, setQuantidade] = useState("");
-
-  // ===============================
-  // 2) Estado para itens adicionados
-  // ===============================
-  const [itens, setItens] = useState([]);
-
-  // ===============================
-  // 3) Estado para dados da requisição
-  // ===============================
+  
+  // Campo Observação (antigo Justificativa)
   const [justificativa, setJustificativa] = useState("");
 
-  // ======================
-  // Constantes fixas
-  // ======================
+  // Flag para confirmar (travar) a seção de Classificação
+  const [classificacaoConfirmada, setClassificacaoConfirmada] = useState(false);
+
+  // Seção Itens
+  // "Materiais" serão buscados com base no grupo de serviço (Classif.2)
+  // Cada material é representado como objeto: { descricao, subgrupo3, servico }
+  const [materiais, setMateriais] = useState([]);
+  // O valor selecionado será armazenado como string JSON (para transportar o objeto)
+  const [materialSelecionado, setMaterialSelecionado] = useState("");
+  const [unidadeSelecionada, setUnidadeSelecionada] = useState(null);
+  const [quantidade, setQuantidade] = useState("");
+  
+  // Lista de itens adicionados
+  const [itens, setItens] = useState([]);
+
+  // Constantes fixas para requisição
   const usuarioId = user?.id || null;
   const statusId = 1; // 1 = pendente
   const codigoProjetoPadrao = user?.codigo_projeto || "";
 
-
   // ------------------------------
-  // Estilos em linha (exemplo)
+  // Estilos em linha (mesmo padrão)
   // ------------------------------
   const containerStyle = {
     maxWidth: "900px",
@@ -124,12 +114,12 @@ const CreateRequisicao = () => {
   };
 
   // ========================================================
-  // A) Efeitos para buscar dados (Obras, Classificações etc.)
+  // Efeitos para buscar dados
   // ========================================================
 
+  // Buscar dados da obra
   useEffect(() => {
     if (!obraSelecionada) return;
-  
     fetch(`http://127.0.0.1:8000/obras/${obraSelecionada}`)
       .then((res) => {
         if (!res.ok) {
@@ -145,34 +135,12 @@ const CreateRequisicao = () => {
         console.error("Erro ao buscar a obra:", err);
         setNomeObra("Erro ao carregar");
       });
-  }, [obraSelecionada]); 
-
-
-  // 2) Buscar subgrupos1
-  useEffect(() => {
-    if (!obraSelecionada) return;
-    fetch(`http://127.0.0.1:8000/gerencial/subgrupos1/${obraSelecionada}`)
-      .then((res) => {
-        if (!res.ok) {
-          console.warn("Não encontrou subgrupos1. Status:", res.status);
-          setClassificacoes1([]);
-          return null;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data) setClassificacoes1(data);
-      })
-      .catch((err) => {
-        console.error("Erro ao buscar subgrupos1:", err);
-        setClassificacoes1([]);
-      });
   }, [obraSelecionada]);
 
-  // 3) Buscar subgrupos2
+  // Buscar "Selecione o grupo de serviço" (antigo subgrupos2) – usando Classif.1 fixa
   useEffect(() => {
-    if (!classificacao1Selecionada) return;
-    fetch(`http://127.0.0.1:8000/gerencial/subgrupos2/${obraSelecionada}/${classificacao1Selecionada}`)
+    if (!obraSelecionada) return;
+    fetch(`http://127.0.0.1:8000/gerencial/subgrupos2/${obraSelecionada}/${classificacaoFixa}`)
       .then((res) => {
         if (!res.ok) {
           console.warn("Não encontrou subgrupos2. Status:", res.status);
@@ -188,96 +156,9 @@ const CreateRequisicao = () => {
         console.error("Erro ao buscar subgrupos2:", err);
         setClassificacoes2([]);
       });
-  }, [classificacao1Selecionada, obraSelecionada]);
+  }, [obraSelecionada, classificacaoFixa]);
 
-  // 4) Buscar subgrupos3
-  useEffect(() => {
-    if (!classificacao2Selecionada) return;
-    fetch(`http://127.0.0.1:8000/gerencial/subgrupos3/${obraSelecionada}/${classificacao1Selecionada}/${classificacao2Selecionada}`)
-      .then((res) => {
-        if (!res.ok) {
-          console.warn("Não encontrou subgrupos3. Status:", res.status);
-          setClassificacoes3([]);
-          return null;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data) setClassificacoes3(data);
-      })
-      .catch((err) => {
-        console.error("Erro ao buscar subgrupos3:", err);
-        setClassificacoes3([]);
-      });
-  }, [classificacao2Selecionada, classificacao1Selecionada, obraSelecionada]);
-
-  // 5) Buscar serviços
-  useEffect(() => {
-    if (!classificacao3Selecionada) return;
-    fetch(`http://127.0.0.1:8000/gerencial/servicos/${obraSelecionada}/${classificacao1Selecionada}/${classificacao2Selecionada}/${classificacao3Selecionada}`)
-      .then((res) => {
-        if (!res.ok) {
-          console.warn("Não encontrou serviços. Status:", res.status);
-          setServicos([]);
-          return null;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data) setServicos(data);
-      })
-      .catch((err) => {
-        console.error("Erro ao buscar serviços:", err);
-        setServicos([]);
-      });
-  }, [classificacao3Selecionada, classificacao2Selecionada, classificacao1Selecionada, obraSelecionada]);
-
-  // 6) Buscar descrições
-  useEffect(() => {
-    if (!servicoSelecionado) return;
-    fetch(`http://127.0.0.1:8000/gerencial/descricoes/${obraSelecionada}/${classificacao1Selecionada}/${classificacao2Selecionada}/${classificacao3Selecionada}/${servicoSelecionado}`)
-      .then((res) => {
-        if (!res.ok) {
-          console.warn("Não encontrou descrições. Status:", res.status);
-          setDescricoes([]);
-          return null;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data) setDescricoes(data);
-      })
-      .catch((err) => {
-        console.error("Erro ao buscar descrições:", err);
-        setDescricoes([]);
-      });
-  }, [servicoSelecionado, classificacao3Selecionada, classificacao2Selecionada, classificacao1Selecionada, obraSelecionada]);
-
-  // 7) Buscar unidades
-  useEffect(() => {
-    if (!descricaoSelecionada) {
-        setUnidadeSelecionada(null); // Reseta quando a descrição não está selecionada
-        return;
-    }
-
-    fetch(`http://127.0.0.1:8000/gerencial/unidades/${obraSelecionada}/${classificacao1Selecionada}/${classificacao2Selecionada}/${classificacao3Selecionada}/${servicoSelecionado}/${descricaoSelecionada}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.length > 0) {
-          setUnidadeSelecionada(data[0]); // Como é apenas 1 unidade, pegamos o primeiro item da lista
-        } else {
-          setUnidadeSelecionada("Não disponível"); // Caso não tenha unidade associada
-        }
-      })
-      .catch((err) => {
-        console.error("Erro ao buscar unidade:", err);
-        setUnidadeSelecionada("Erro ao carregar");
-      });
-}, [descricaoSelecionada, obraSelecionada, classificacao1Selecionada, classificacao2Selecionada, classificacao3Selecionada, servicoSelecionado]);
-
-
-
-  // 8) Buscar empresas
+  // Buscar empresas
   useEffect(() => {
     fetch("http://127.0.0.1:8000/empresas/")
       .then((res) => {
@@ -297,7 +178,7 @@ const CreateRequisicao = () => {
       });
   }, []);
 
-  // 9) Buscar locais de aplicação
+  // Buscar locais de aplicação
   useEffect(() => {
     fetch("http://127.0.0.1:8000/locais-aplicacao/")
       .then((res) => {
@@ -317,78 +198,174 @@ const CreateRequisicao = () => {
       });
   }, []);
 
-  // ========================================================
-  // B) Função para adicionar item
-  // ========================================================
-  const handleAddItem = (e) => {
-    e.preventDefault();
-    const novoItem = {
-      subgrupo_1: classificacao1Selecionada,
-      subgrupo_2: classificacao2Selecionada,
-      subgrupo_3: classificacao3Selecionada,
-      servico: servicoSelecionado,
-      descricao: descricaoSelecionada,
-      unidade_medida: unidadeSelecionada,
-      quantidade_requisitada: parseFloat(quantidade),
-      local_aplicacao: localSelecionado,
-    };
+  // Quando a seção de Classificação for confirmada e houver um grupo de serviço selecionado,
+  // buscar a lista de materiais utilizando Promise.all para executar as requisições em paralelo.
+  useEffect(() => {
+    if (classificacaoConfirmada && classificacao2Selecionada) {
+      async function fetchMateriais() {
+        try {
+          // Buscar subgrupos3 para a obra com Classif.1 fixa e o grupo selecionado
+          const resSubgrupo3 = await fetch(
+            `http://127.0.0.1:8000/gerencial/subgrupos3/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}`
+          );
+          if (!resSubgrupo3.ok) {
+            setMateriais([]);
+            return;
+          }
+          const subgrupos3 = await resSubgrupo3.json();
+          // Para cada subgrupo3, buscar os serviços em paralelo
+          const subgrupoPromises = subgrupos3.map(async (subgrupo3) => {
+            const resServicos = await fetch(
+              `http://127.0.0.1:8000/gerencial/servicos/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}/${subgrupo3}`
+            );
+            if (!resServicos.ok) return [];
+            const servicos = await resServicos.json();
+            // Para cada serviço, buscar as descrições em paralelo
+            const servicePromises = servicos.map(async (servico) => {
+              const resDescricoes = await fetch(
+                `http://127.0.0.1:8000/gerencial/descricoes/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}/${subgrupo3}/${servico}`
+              );
+              if (!resDescricoes.ok) return [];
+              const descricoes = await resDescricoes.json();
+              // Retorna um array de objetos para cada descrição
+              return descricoes.map((descricao) => ({ descricao, subgrupo3, servico }));
+            });
+            const resultados = await Promise.all(servicePromises);
+            return resultados.flat();
+          });
+          const materialsArrays = await Promise.all(subgrupoPromises);
+          const materialList = materialsArrays.flat();
+          // Remover duplicatas
+          const uniqueMaterials = Array.from(
+            new Set(materialList.map((m) => JSON.stringify(m)))
+          ).map((str) => JSON.parse(str));
+          setMateriais(uniqueMaterials);
+        } catch (error) {
+          console.error("Erro ao buscar materiais:", error);
+          setMateriais([]);
+        }
+      }
+      fetchMateriais();
+    }
+  }, [classificacaoConfirmada, classificacao2Selecionada, obraSelecionada, classificacaoFixa]);
 
-    if (!novoItem.subgrupo_1 || novoItem.subgrupo_1.length < 3) {
-      return alert("Classificação 1 deve ter pelo menos 3 caracteres.");
+  // Ao selecionar um material, buscar a unidade correspondente
+  useEffect(() => {
+    if (!materialSelecionado) {
+      setUnidadeSelecionada(null);
+      return;
     }
-    if (!novoItem.subgrupo_2 || novoItem.subgrupo_2.length < 3) {
-      return alert("Classificação 2 deve ter pelo menos 3 caracteres.");
+    try {
+      const materialObj = JSON.parse(materialSelecionado);
+      fetch(
+        `http://127.0.0.1:8000/gerencial/unidades/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}/${materialObj.subgrupo3}/${materialObj.servico}/${materialObj.descricao}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.length > 0) {
+            setUnidadeSelecionada(data[0]);
+          } else {
+            setUnidadeSelecionada("Não disponível");
+          }
+        })
+        .catch((err) => {
+          console.error("Erro ao buscar unidade:", err);
+          setUnidadeSelecionada("Erro ao carregar");
+        });
+    } catch (e) {
+      console.error("Erro ao parsear materialSelecionado", e);
     }
-    if (!novoItem.subgrupo_3 || novoItem.subgrupo_3.length < 3) {
-      return alert("Classificação 3 deve ter pelo menos 3 caracteres.");
+  }, [materialSelecionado, obraSelecionada, classificacao2Selecionada, classificacaoFixa]);
+
+  // ========================================================
+  // Funções de Manipulação
+  // ========================================================
+
+  // Confirma a seção de Classificação (trava os campos e libera a próxima seção)
+  const handleConfirmClassificacao = (e) => {
+    e.preventDefault();
+    if (!classificacao2Selecionada || classificacao2Selecionada.length < 3) {
+      return alert("Selecione o grupo de serviço com pelo menos 3 caracteres.");
     }
-    if (!novoItem.servico || novoItem.servico.length < 3) {
-      return alert("Serviço deve ter pelo menos 3 caracteres.");
+    if (!empresaSelecionada) {
+      return alert("Selecione a empresa.");
     }
-    if (!novoItem.descricao || novoItem.descricao.length < 3) {
-      return alert("Descrição deve ter pelo menos 3 caracteres.");
-    }
-    if (!novoItem.local_aplicacao || novoItem.local_aplicacao.length < 3) {
+    if (!localSelecionado || localSelecionado.length < 3) {
       return alert("Local de aplicação deve ter pelo menos 3 caracteres.");
     }
+    setClassificacaoConfirmada(true);
+  };
+
+  // Volta para a seção de Classificação (limpa os itens adicionados)
+  const handleVoltarClassificacao = () => {
+    if (window.confirm("Ao voltar, os itens adicionados serão perdidos. Deseja continuar?")) {
+      setClassificacaoConfirmada(false);
+      setClassificacao2Selecionada("");
+      setEmpresaSelecionada("");
+      setLocalSelecionado("");
+      setJustificativa("");
+      setItens([]);
+      setMaterialSelecionado("");
+      setUnidadeSelecionada(null);
+      setQuantidade("");
+    }
+  };
+
+  // Adiciona um item na seção Itens
+  const handleAddItem = (e) => {
+    e.preventDefault();
+    if (!materialSelecionado) {
+      return alert("Selecione um material.");
+    }
+    let materialObj;
+    try {
+      materialObj = JSON.parse(materialSelecionado);
+    } catch (e) {
+      return alert("Erro ao processar o material selecionado.");
+    }
+    const novoItem = {
+      subgrupo_1: classificacaoFixa,
+      subgrupo_2: classificacao2Selecionada, // Grupo de Serviço
+      subgrupo_3: materialObj.subgrupo3,
+      servico: materialObj.servico,
+      descricao: materialObj.descricao, // Material
+      unidade_medida: unidadeSelecionada,
+      quantidade_requisitada: parseFloat(quantidade),
+      local_aplicacao: localSelecionado, // vem da seção de Classificação
+    };
+
+    if (!novoItem.descricao || novoItem.descricao.length < 3) {
+      return alert("Selecione o material (descrição com pelo menos 3 caracteres).");
+    }
     if (!novoItem.unidade_medida) {
-      return alert("Selecione a unidade de medida.");
+      return alert("Selecione a unidade.");
     }
     if (!novoItem.quantidade_requisitada || novoItem.quantidade_requisitada <= 0) {
       return alert("Quantidade deve ser maior que 0.");
     }
 
     setItens([...itens, novoItem]);
-    setClassificacao1Selecionada("");
-    setClassificacao2Selecionada("");
-    setClassificacao3Selecionada("");
-    setServicoSelecionado("");
-    setDescricaoSelecionada("");
-    setUnidadeSelecionada("");
+    // Limpa os campos da seção Itens para nova adição
+    setMaterialSelecionado("");
+    setUnidadeSelecionada(null);
     setQuantidade("");
-    setLocalSelecionado("");
   };
 
-  // ========================================================
-  // C) Remover item
-  // ========================================================
+  // Remove item adicionado
   const handleRemoveItem = (index) => {
     const listaAtualizada = [...itens];
     listaAtualizada.splice(index, 1);
     setItens(listaAtualizada);
   };
 
-  // ========================================================
-  // D) Criar a requisição e inserir itens
-  // ========================================================
-
+  // Cria a requisição e insere os itens
   const handleCreateRequisicao = async (e) => {
     e.preventDefault();
-  
+
     if (itens.length === 0) {
       return alert("Adicione pelo menos um item antes de criar a requisição.");
     }
-  
+
     const requisicaoPayload = {
       usuario_id: usuarioId,
       codigo_projeto: codigoProjetoPadrao,
@@ -396,51 +373,60 @@ const CreateRequisicao = () => {
       status_id: statusId,
       justificativa: justificativa || "",
     };
-  
+
     try {
       const response = await fetch("http://127.0.0.1:8000/requisicoes/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requisicaoPayload),
       });
-  
+
       if (!response.ok) {
         const errorResponse = await response.json();
         throw new Error("Erro ao criar a requisição: " + JSON.stringify(errorResponse));
       }
-  
+
       const novaRequisicao = await response.json();
       console.log(`✅ Requisição criada com sucesso! ID: ${novaRequisicao.id}`);
-  
+
       const itensPayload = itens.map((item) => ({
         requisicao_id: novaRequisicao.id,
         ...item,
       }));
-  
+
       await fetch(`http://127.0.0.1:8000/requisicoes/${novaRequisicao.id}/itens`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(itensPayload),
       });
-  
-      // 📌 Armazena os dados da requisição criada
+
+      // Incluindo data_criacao na requisição criada
       setNovaRequisicaoCriada({
         id: novaRequisicao.id,
-        empresa: empresas.find((emp) => emp.id === parseInt(empresaSelecionada))?.nome || "Não informado",
+        data_criacao: novaRequisicao.data_criacao,
+        empresa:
+          empresas.find((emp) => emp.id === parseInt(empresaSelecionada))?.nome ||
+          "Não informado",
         justificativa,
         itens,
       });
-  
-      // 📌 Pergunta ao usuário se deseja imprimir
+
       const desejaImprimir = window.confirm("Requisição criada com sucesso! Deseja imprimir?");
       setMostrarResumo(desejaImprimir);
-  
+
       if (!desejaImprimir) {
-        setItens([]); 
-        setJustificativa(""); 
-        setEmpresaSelecionada(""); 
+        // Reset geral: todos os campos voltam ao valor inicial (dropdowns mostram "Selecione...")
+        setClassificacaoConfirmada(false);
+        setClassificacao2Selecionada("");
+        setEmpresaSelecionada("");
+        setLocalSelecionado("");
+        setJustificativa("");
+        setMateriais([]);
+        setMaterialSelecionado("");
+        setUnidadeSelecionada(null);
+        setQuantidade("");
+        setItens([]);
       }
-  
     } catch (error) {
       console.error("❌ Erro ao criar requisição:", error);
       alert(error.message || "Erro ao criar a requisição");
@@ -451,72 +437,75 @@ const CreateRequisicao = () => {
     window.print();
   };
 
+  // Ao selecionar "Nova Requisição" no resumo, todos os campos serão resetados para o estado inicial.
   const handleNovaRequisicao = () => {
-    setItens([]);
-    setJustificativa("");
+    setClassificacaoConfirmada(false);
+    setClassificacao2Selecionada("");
     setEmpresaSelecionada("");
+    setLocalSelecionado("");
+    setJustificativa("");
+    setMateriais([]);
+    setMaterialSelecionado("");
+    setUnidadeSelecionada(null);
+    setQuantidade("");
+    setItens([]);
     setNovaRequisicaoCriada(null);
-    setMostrarResumo(false); // 🔥 Importante: Isso faz voltar para o formulário!
+    setMostrarResumo(false);
   };
-  
-  
 
   // ========================================================
-  // E) Renderização
+  // Renderização
   // ========================================================
+
+  // Página de resumo para impressão
   if (mostrarResumo) {
     return (
       <div style={{ maxWidth: "900px", margin: "20px auto", fontFamily: "Arial, sans-serif", padding: "20px" }}>
         <h1 style={{ textAlign: "center", marginBottom: "10px" }}>Resumo da Requisição</h1>
-  
-        <div style={{
-          border: "1px solid #ddd",
-          padding: "20px",
-          borderRadius: "8px",
-          backgroundColor: "#f9f9f9",
-        }}>
+        <div
+          style={{
+            border: "1px solid #ddd",
+            padding: "20px",
+            borderRadius: "8px",
+            backgroundColor: "#f9f9f9",
+          }}
+        >
           <p><strong>ID:</strong> {novaRequisicaoCriada?.id}</p>
+          <p>
+            <strong>Data da Requisição:</strong>{" "}
+            {novaRequisicaoCriada?.data_criacao
+              ? new Date(novaRequisicaoCriada.data_criacao).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })
+              : ""}
+          </p>
+          <p><strong>Usuário Criador:</strong> {user?.nome}</p>
+          <p><strong>Obra:</strong> {nomeObra}</p>
           <p><strong>Empresa:</strong> {novaRequisicaoCriada?.empresa}</p>
-          <p><strong>Justificativa:</strong> {novaRequisicaoCriada?.justificativa}</p>
-  
-          <h3 style={{ marginTop: "20px", borderBottom: "2px solid #ccc", paddingBottom: "5px" }}>Itens Requisitados</h3>
-          <table style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            marginTop: "10px",
-            backgroundColor: "#fff"
-          }}>
+          <p><strong>Observação:</strong> {novaRequisicaoCriada?.justificativa}</p>
+          <h3 style={{ marginTop: "20px", borderBottom: "2px solid #ccc", paddingBottom: "5px" }}>
+            Itens Requisitados
+          </h3>
+          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px", backgroundColor: "#fff" }}>
             <thead>
               <tr style={{ backgroundColor: "#007bff", color: "#fff", textAlign: "left" }}>
-                <th style={thtdStyle}>Subgrupo 1</th>
-                <th style={thtdStyle}>Subgrupo 2</th>
-                <th style={thtdStyle}>Subgrupo 3</th>
-                <th style={thtdStyle}>Serviço</th>
-                <th style={thtdStyle}>Descrição</th>
+                <th style={thtdStyle}>Grupo de Serviço</th>
+                <th style={thtdStyle}>Material</th>
+                <th style={thtdStyle}>Unidade</th>
                 <th style={{ ...thtdStyle, textAlign: "center" }}>Quantidade</th>
-                <th style={{ ...thtdStyle, textAlign: "center" }}>Unidade</th>
                 <th style={thtdStyle}>Local de Aplicação</th>
               </tr>
             </thead>
             <tbody>
               {novaRequisicaoCriada?.itens.map((item, index) => (
-                <tr key={index} style={{
-                  borderBottom: "1px solid #ddd",
-                  backgroundColor: index % 2 === 0 ? "#f2f2f2" : "white",
-                }}>
-                  <td style={thtdStyle}>{item.subgrupo_1}</td>
+                <tr key={index} style={{ borderBottom: "1px solid #ddd", backgroundColor: index % 2 === 0 ? "#f2f2f2" : "white" }}>
                   <td style={thtdStyle}>{item.subgrupo_2}</td>
-                  <td style={thtdStyle}>{item.subgrupo_3}</td>
-                  <td style={thtdStyle}>{item.servico}</td>
                   <td style={thtdStyle}>{item.descricao}</td>
+                  <td style={thtdStyle}>{item.unidade_medida}</td>
                   <td style={{ ...thtdStyle, textAlign: "center" }}>{item.quantidade_requisitada}</td>
-                  <td style={{ ...thtdStyle, textAlign: "center" }}>{item.unidade_medida}</td>
                   <td style={thtdStyle}>{item.local_aplicacao}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-  
           <div style={{ textAlign: "center", marginTop: "20px" }}>
             <button style={{ ...buttonStyle, marginRight: "10px" }} onClick={handlePrint}>
               🖨️ Imprimir
@@ -529,45 +518,25 @@ const CreateRequisicao = () => {
       </div>
     );
   }
-  
-  
-  
-  // Aqui continua o return original do formulário
+
   return (
     <div style={containerStyle}>
       <h1 style={{ textAlign: "center", marginBottom: "1rem" }}>
         Nova Requisição {nomeObra ? `- ${nomeObra}` : ""}
       </h1>
-      
-      {/* 1) Form para adicionar itens */}
+
+      {/* Seção Classificação */}
       <div style={cardStyle}>
-        <h2 style={{ marginTop: 0 }}>Adicionar Item</h2>
-        <form onSubmit={handleAddItem}>
+        <h2 style={{ marginTop: 0 }}>Classificação</h2>
+        <form onSubmit={handleConfirmClassificacao}>
           <div style={formRowStyle}>
-  
             <div style={labelContainerStyle}>
-              <label>Classif. 1:</label>
-              <select
-                value={classificacao1Selecionada}
-                onChange={(e) => setClassificacao1Selecionada(e.target.value)}
-                style={inputStyle}
-              >
-                <option value="">Selecione...</option>
-                {classificacoes1.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
-  
-            <div style={labelContainerStyle}>
-              <label>Classif. 2:</label>
+              <label>Selecione o grupo de serviço:</label>
               <select
                 value={classificacao2Selecionada}
                 onChange={(e) => setClassificacao2Selecionada(e.target.value)}
                 style={inputStyle}
-                disabled={!classificacao1Selecionada}
+                disabled={classificacaoConfirmada}
               >
                 <option value="">Selecione...</option>
                 {classificacoes2.map((item) => (
@@ -577,96 +546,31 @@ const CreateRequisicao = () => {
                 ))}
               </select>
             </div>
-  
-            <div style={labelContainerStyle}>
-              <label>Classif. 3:</label>
-              <select
-                value={classificacao3Selecionada}
-                onChange={(e) => setClassificacao3Selecionada(e.target.value)}
-                style={inputStyle}
-                disabled={!classificacao2Selecionada}
-              >
-                <option value="">Selecione...</option>
-                {classificacoes3.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
-  
           <div style={formRowStyle}>
             <div style={labelContainerStyle}>
-              <label>Serviço:</label>
+              <label>Empresa:</label>
               <select
-                value={servicoSelecionado}
-                onChange={(e) => setServicoSelecionado(e.target.value)}
+                value={empresaSelecionada}
+                onChange={(e) => setEmpresaSelecionada(e.target.value)}
                 style={inputStyle}
-                disabled={!classificacao3Selecionada}
+                disabled={classificacaoConfirmada}
               >
                 <option value="">Selecione...</option>
-                {servicos.map((srv) => (
-                  <option key={srv} value={srv}>
-                    {srv}
+                {empresas.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.nome}
                   </option>
                 ))}
               </select>
             </div>
-  
-            <div style={labelContainerStyle}>
-              <label>Descrição:</label>
-              <select
-                value={descricaoSelecionada}
-                onChange={(e) => setDescricaoSelecionada(e.target.value)}
-                style={inputStyle}
-                disabled={!servicoSelecionado}
-              >
-                <option value="">Selecione...</option>
-                {descricoes.map((desc) => (
-                  <option key={desc} value={desc}>
-                    {desc}
-                  </option>
-                ))}
-              </select>
-            </div>
-  
-            <div style={labelContainerStyle}>
-              <label>Unidade:</label>
-              <div style={{
-                padding: "4px",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                backgroundColor: "#f8f8f8",
-                minHeight: "14px",
-                display: "flex",
-                alignItems: "center",
-                paddingLeft: "5px"
-              }}>
-                {unidadeSelecionada || " "}
-              </div>
-            </div>
-
-  
-            <div style={labelContainerStyle}>
-              <label>Quantidade:</label>
-              <input
-                type="number"
-                step="any"
-                value={quantidade}
-                onChange={(e) => setQuantidade(e.target.value)}
-                style={inputStyle}
-              />
-            </div>
-          </div>
-  
-          <div style={formRowStyle}>
             <div style={labelContainerStyle}>
               <label>Local Aplicação:</label>
               <select
                 value={localSelecionado}
                 onChange={(e) => setLocalSelecionado(e.target.value)}
                 style={inputStyle}
+                disabled={classificacaoConfirmada}
               >
                 <option value="">Selecione...</option>
                 {locais.map((loc) => (
@@ -676,99 +580,142 @@ const CreateRequisicao = () => {
                 ))}
               </select>
             </div>
-  
-            <div style={{ display: "flex", alignItems: "flex-end" }}>
-              <button type="submit" style={buttonStyle}>
-                Adicionar Item
-              </button>
+          </div>
+          <div style={formRowStyle}>
+            <div style={labelContainerStyle}>
+              <label>Observação:</label>
+              <textarea
+                value={justificativa}
+                onChange={(e) => setJustificativa(e.target.value)}
+                rows={3}
+                style={inputStyle}
+                disabled={classificacaoConfirmada}
+              />
             </div>
           </div>
+          {/* Apenas o botão Confirmar nesta seção */}
+          {!classificacaoConfirmada && (
+            <div style={{ textAlign: "right" }}>
+              <button type="submit" style={buttonStyle}>
+                Confirmar
+              </button>
+            </div>
+          )}
         </form>
       </div>
-  
-      {/* 2) Tabela de ITENS adicionados */}
+
+      {/* Seção Itens – só é exibida se a classificação estiver confirmada */}
+      {classificacaoConfirmada && (
+        <div style={cardStyle}>
+          <h2 style={{ marginTop: 0 }}>Itens</h2>
+          {/* Botão Voltar para retornar à seção de Classificação */}
+          <div style={{ textAlign: "right", marginBottom: "10px" }}>
+            <button type="button" style={buttonStyle} onClick={handleVoltarClassificacao}>
+              Voltar
+            </button>
+          </div>
+          <form onSubmit={handleAddItem}>
+            <div style={formRowStyle}>
+              <div style={labelContainerStyle}>
+                <label>Selecione o Material:</label>
+                <select
+                  value={materialSelecionado}
+                  onChange={(e) => setMaterialSelecionado(e.target.value)}
+                  style={inputStyle}
+                >
+                  <option value="">Selecione...</option>
+                  {materiais.map((mat, index) => (
+                    <option key={index} value={JSON.stringify(mat)}>
+                      {mat.descricao}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={labelContainerStyle}>
+                <label>Unidade:</label>
+                <div
+                  style={{
+                    padding: "4px",
+                    borderRadius: "4px",
+                    border: "1px solid #ccc",
+                    backgroundColor: "#f8f8f8",
+                    minHeight: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    paddingLeft: "5px"
+                  }}
+                >
+                  {unidadeSelecionada || " "}
+                </div>
+              </div>
+              <div style={labelContainerStyle}>
+                <label>Quantidade:</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={quantidade}
+                  onChange={(e) => setQuantidade(e.target.value)}
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+            <div style={formRowStyle}>
+              <div style={{ display: "flex", alignItems: "flex-end" }}>
+                <button type="submit" style={buttonStyle}>
+                  Adicionar Item
+                </button>
+              </div>
+            </div>
+          </form>
+          {/* Tabela de Itens Adicionados */}
+          <div>
+            <h3 style={{ marginTop: 0 }}>Itens Adicionados</h3>
+            {itens.length === 0 ? (
+              <p style={{ fontStyle: "italic" }}>Nenhum item adicionado ainda.</p>
+            ) : (
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={thtdStyle}>Grupo de Serviço</th>
+                    <th style={thtdStyle}>Material</th>
+                    <th style={thtdStyle}>Unidade</th>
+                    <th style={thtdStyle}>Quantidade</th>
+                    <th style={thtdStyle}>Local de Aplicação</th>
+                    <th style={thtdStyle}>Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {itens.map((item, index) => (
+                    <tr key={index}>
+                      <td style={thtdStyle}>{item.subgrupo_2}</td>
+                      <td style={thtdStyle}>{item.descricao}</td>
+                      <td style={thtdStyle}>{item.unidade_medida}</td>
+                      <td style={thtdStyle}>{item.quantidade_requisitada}</td>
+                      <td style={thtdStyle}>{item.local_aplicacao}</td>
+                      <td style={thtdStyle}>
+                        <button type="button" style={removeBtnStyle} onClick={() => handleRemoveItem(index)}>
+                          Remover
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Botão final para criar a requisição */}
       <div style={cardStyle}>
-        <h3 style={{ marginTop: 0 }}>Itens Adicionados</h3>
-        {itens.length === 0 ? (
-          <p style={{ fontStyle: "italic" }}>Nenhum item adicionado ainda.</p>
-        ) : (
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thtdStyle}>Subgrupo1</th>
-                <th style={thtdStyle}>Subgrupo2</th>
-                <th style={thtdStyle}>Subgrupo3</th>
-                <th style={thtdStyle}>Serviço</th>
-                <th style={thtdStyle}>Descrição</th>
-                <th style={thtdStyle}>Unidade</th>
-                <th style={thtdStyle}>Quantidade</th>
-                <th style={thtdStyle}>Local</th>
-                <th style={thtdStyle}>Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {itens.map((item, index) => (
-                <tr key={index}>
-                  <td style={thtdStyle}>{item.subgrupo_1}</td>
-                  <td style={thtdStyle}>{item.subgrupo_2}</td>
-                  <td style={thtdStyle}>{item.subgrupo_3}</td>
-                  <td style={thtdStyle}>{item.servico}</td>
-                  <td style={thtdStyle}>{item.descricao}</td>
-                  <td style={thtdStyle}>{item.unidade_medida}</td>
-                  <td style={thtdStyle}>{item.quantidade_requisitada}</td>
-                  <td style={thtdStyle}>{item.local_aplicacao}</td>
-                  <td style={thtdStyle}>
-                    <button type="button" style={removeBtnStyle} onClick={() => handleRemoveItem(index)}>
-                      Remover
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <form onSubmit={handleCreateRequisicao}>
+          <button type="submit" style={buttonStyle}>
+            Criar Requisição
+          </button>
+        </form>
       </div>
-        {/* 3) Form de criação da requisição */}
-          <div style={cardStyle}>
-            <h2 style={{ marginTop: 0 }}>Dados da Requisição</h2>
-            <form onSubmit={handleCreateRequisicao}>
-              <div style={formRowStyle}>
-                <div style={labelContainerStyle}>
-                  <label>Empresa:</label>
-                  <select
-                    value={empresaSelecionada}
-                    onChange={(e) => setEmpresaSelecionada(e.target.value)}
-                    style={inputStyle}
-                  >
-                    <option value="">Selecione...</option>
-                    {empresas.map((emp) => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.nome}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={labelContainerStyle}>
-                  <label>Justificativa:</label>
-                  <textarea
-                    value={justificativa}
-                    onChange={(e) => setJustificativa(e.target.value)}
-                    rows={3}
-                    style={inputStyle}
-                  />
-                </div>
-    </div>
-
-    <button type="submit" style={buttonStyle}>
-      Criar Requisição Completa
-    </button>
-  </form>
-</div>
-
-
     </div>
   );
-}
+};
 
-  export default CreateRequisicao;
+export default CreateRequisicao;

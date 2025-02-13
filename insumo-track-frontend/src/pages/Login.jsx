@@ -1,47 +1,51 @@
-// src/pages/Login.jsx
+// pages/Login.jsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const isLogged = await login(username, password);
-    if (isLogged) {
-      navigate("/criar-requisicao");
-    } else {
-      alert("Usuário ou senha inválidos!");
+    try {
+      await login(email, password);
+      const from = location.state?.from?.pathname || "/criar-requisicao";
+      navigate(from, { replace: true });
+    } catch (error) {
+      console.error("Erro no login", error);
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "50px auto" }}>
+    <div style={{ maxWidth: "400px", margin: "20px auto" }}>
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "12px" }}>
-          <label>Usuário:</label>
+        <div>
+          <label>Email:</label>
           <input
             type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
           />
         </div>
-        <div style={{ marginBottom: "12px" }}>
+        <div>
           <label>Senha:</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
+            style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
           />
         </div>
-        <button type="submit">Entrar</button>
+        <button type="submit" style={{ padding: "8px 16px" }}>
+          Entrar
+        </button>
       </form>
     </div>
   );

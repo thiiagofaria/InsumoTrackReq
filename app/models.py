@@ -2,6 +2,9 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Date, Floa
 from sqlalchemy.orm import relationship
 from app.database import Base
 import datetime
+from pytz import timezone
+
+local_tz = timezone("America/Sao_Paulo")
 
 
 class HistoricoStatusRequisicao(Base):
@@ -10,10 +13,10 @@ class HistoricoStatusRequisicao(Base):
     id = Column(Integer, primary_key=True, index=True)
     requisicao_id = Column(Integer, ForeignKey("requisicoes.id", ondelete="CASCADE"))
     status_id = Column(Integer, ForeignKey("status_requisicao.id", ondelete="CASCADE"))
-    data_alteracao = Column(DateTime, default=datetime.datetime.utcnow)
+    data_alteracao = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(local_tz), nullable=False)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+    observacao_aprovacao = Column(String(500), nullable=True)
 
-    # 🔹 Adicione explicitamente a relação correta
     status = relationship("StatusRequisicao", back_populates="historico_status")
 
 
@@ -74,14 +77,14 @@ class Requisicao(Base):
     __tablename__ = "requisicoes"
 
     id = Column(Integer, primary_key=True, index=True)
-    data_criacao = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    data_criacao = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(local_tz), nullable=False)
     usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"))
     usuario_aprovador_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
     codigo_projeto = Column(String(50), ForeignKey("obras.codigo_projeto", ondelete="CASCADE"), nullable=False)
     empresa_id = Column(Integer, ForeignKey("empresas.id", ondelete="CASCADE"))
     status_id = Column(Integer, ForeignKey("status_requisicao.id", ondelete="CASCADE"), nullable=False)
     justificativa = Column(Text, nullable=True)
-    data_aprovacao = Column(DateTime, nullable=True)
+    data_aprovacao = data_aprovacao = Column(DateTime, nullable=True)
 
     # Relacionamentos
     itens = relationship("ItensRequisicao", back_populates="requisicao", cascade="all, delete-orphan")
@@ -89,6 +92,7 @@ class Requisicao(Base):
     usuario_criador = relationship("Usuario", back_populates="requisicoes_criadas", foreign_keys=[usuario_id])
     usuario_aprovador_rel = relationship("Usuario", back_populates="requisicoes_aprovadas", foreign_keys=[usuario_aprovador_id])
     status = relationship("StatusRequisicao", back_populates="requisicoes")
+    
 
 class ItensRequisicao(Base):
     __tablename__ = "itens_requisicao"
@@ -111,10 +115,15 @@ class BaixaItemRequisicao(Base):
     __tablename__ = "baixas_itens_requisicao"
 
     id = Column(Integer, primary_key=True, index=True)
-    item_requisicao_id = Column(Integer, ForeignKey("itens_requisicao.id", ondelete="CASCADE"))
-    usuario_baixa_id = Column(Integer, ForeignKey("usuarios.id"))
+    requisicao_id = Column(Integer, ForeignKey("requisicoes.id", ondelete="CASCADE"), nullable=False)  # Novo campo
+    item_requisicao_id = Column(Integer, ForeignKey("itens_requisicao.id", ondelete="CASCADE"), nullable=False)
+    usuario_baixa_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     quantidade_baixada = Column(Float, nullable=False)
-    data_baixa = Column(DateTime, default=datetime.datetime.utcnow)
+    data_baixa = Column(
+        DateTime(timezone=True), 
+        default=lambda: datetime.datetime.now(local_tz), 
+        nullable=False
+    )
 
     item_requisicao = relationship("ItensRequisicao", back_populates="baixas")
     usuario_baixa = relationship("Usuario")

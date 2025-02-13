@@ -20,10 +20,14 @@ def root():
     return {"message": "API InsumoTrackReq está rodando!"}
 
 
+origins = [
+    "http://localhost:5173",  # Adicione aqui as origens permitidas
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Permitir requisições do frontend
+    allow_origins=origins,        # Permite apenas as origens especificadas
     allow_credentials=True,
-    allow_methods=["*"],  # Permitir todos os métodos (GET, POST, PUT, DELETE, etc.)
-    allow_headers=["*"],  # Permitir todos os cabeçalhos
+    allow_methods=["*"],          # Permite todos os métodos (GET, POST, etc.)
+    allow_headers=["*"],          # Permite todos os headers
 )

@@ -4,19 +4,16 @@ import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 
 import Login from "./pages/Login";
-import PrivateRoute from "./components/PrivateRoute";
 import CreateRequisicao from "./pages/CreateRequisicao";
+import ApprovalRequisicao from "./pages/ApprovalRequisicao";
+import BaixaItensRequisicao from "./pages/BaixaItensRequisicao"; // Importa a nova página
+import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   return (
-    // Envolva suas rotas no AuthProvider,
-    // mas NÃO coloque outro BrowserRouter aqui
     <AuthProvider>
       <Routes>
-        {/* Rota pública */}
         <Route path="/login" element={<Login />} />
-
-        {/* Rota privada */}
         <Route 
           path="/criar-requisicao" 
           element={
@@ -25,9 +22,23 @@ function App() {
             </PrivateRoute>
           }
         />
-
-        {/* Se quiser uma rota para a Home (exemplo) */}
-        {/* <Route path="/" element={<Home />} /> */}
+        <Route 
+          path="/aprovar-requisicao" 
+          element={
+            <PrivateRoute>
+              <ApprovalRequisicao />
+            </PrivateRoute>
+          }
+        />
+        {/* Nova rota para o almoxarifado */}
+        <Route 
+          path="/baixa-itens" 
+          element={
+            <PrivateRoute>
+              <BaixaItensRequisicao />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </AuthProvider>
   );

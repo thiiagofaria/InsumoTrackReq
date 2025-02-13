@@ -1,17 +1,16 @@
-// src/components/PrivateRoute.js
+// components/PrivateRoute.jsx
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const PrivateRoute = ({ children }) => {
-  const { user } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
 
-  // Se o usuário não estiver autenticado, redirecione para o login
-  if (!user) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
-  
-  // Caso contrário, renderiza o conteúdo protegido
+
   return children;
 };
 

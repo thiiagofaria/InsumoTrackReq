@@ -6,8 +6,12 @@ import datetime
 from pydantic import ValidationError
 import json
 from sqlalchemy.exc import SQLAlchemyError
+from pytz import timezone
+from app.routes.auth import get_current_user
+from sqlalchemy.orm import joinedload
 
 
+local_tz = timezone("America/Sao_Paulo")
 
 router = APIRouter(
     prefix="/requisicoes",
@@ -28,7 +32,7 @@ def criar_requisicao(requisicao: schemas.RequisicaoCreate, db: Session = Depends
             empresa_id=requisicao.empresa_id,
             status_id=requisicao.status_id,
             justificativa=requisicao.justificativa,
-            data_criacao=datetime.datetime.utcnow(),
+            data_criacao=datetime.datetime.now(local_tz),
         )
 
         db.add(nova_requisicao)
@@ -40,7 +44,7 @@ def criar_requisicao(requisicao: schemas.RequisicaoCreate, db: Session = Depends
             requisicao_id=nova_requisicao.id,
             status_id=nova_requisicao.status_id,
             usuario_id=nova_requisicao.usuario_id,
-            data_alteracao=datetime.datetime.utcnow(),
+            data_alteracao=datetime.datetime.now(local_tz),
         )
         db.add(historico)
         db.commit()
@@ -72,7 +76,14 @@ def listar_requisicoes(db: Session = Depends(get_db)):
 # ✅ Buscar uma requisição por ID (READ)
 @router.get("/{requisicao_id}", response_model=schemas.RequisicaoResponse)
 def buscar_requisicao(requisicao_id: int, db: Session = Depends(get_db)):
-    requisicao = db.query(models.Requisicao).filter(models.Requisicao.id == requisicao_id).first()
+    requisicao = db.query(models.Requisicao)\
+        .options(
+            joinedload(models.Requisicao.itens).joinedload(models.ItensRequisicao.baixas),
+            joinedload(models.Requisicao.usuario_criador),
+            joinedload(models.Requisicao.empresa)
+        )\
+        .filter(models.Requisicao.id == requisicao_id)\
+        .first()
     if not requisicao:
         raise HTTPException(status_code=404, detail="Requisição não encontrada")
     return requisicao
@@ -97,7 +108,7 @@ def atualizar_requisicao(requisicao_id: int, requisicao_update: schemas.Requisic
             requisicao_id=requisicao.id,
             status_id=requisicao.status_id,
             usuario_id=requisicao_update.usuario_id,
-            data_alteracao=datetime.datetime.utcnow()
+            data_alteracao=datetime.datetime.now(local_tz)
         )
         db.add(historico)
         db.commit()
@@ -209,10 +220,11 @@ def dar_baixa_item(
         raise HTTPException(status_code=404, detail="Item não encontrado na requisição")
 
     nova_baixa = models.BaixaItemRequisicao(
+        requisicao_id = requisicao_id,  # Adicionado aqui!
         item_requisicao_id=item_id,
         usuario_baixa_id=baixa_data.usuario_baixa_id,
         quantidade_baixada=baixa_data.quantidade_baixada,
-        data_baixa=datetime.datetime.utcnow()
+        data_baixa=datetime.datetime.now(local_tz)
     )
 
     db.add(nova_baixa)
@@ -220,3 +232,70 @@ def dar_baixa_item(
     db.refresh(nova_baixa)
 
     return nova_baixa
+
+
+@router.post("/{requisicao_id}/aprovar", response_model=schemas.RequisicaoResponse)
+def aprovar_requisicao(
+    requisicao_id: int,
+    aprovacao: schemas.AprovacaoRequisicao,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user)
+):
+    # Busque a requisição pelo ID
+    requisicao = db.query(models.Requisicao).filter(models.Requisicao.id == requisicao_id).first()
+    if not requisicao:
+        raise HTTPException(status_code=404, detail="Requisição não encontrada")
+    
+    # Verifique se a requisição pertence à mesma obra do usuário logado
+    if requisicao.codigo_projeto != current_user.codigo_projeto:
+        raise HTTPException(status_code=403, detail="Você não tem permissão para aprovar esta requisição")
+    
+    # Defina o novo status com base na ação: 
+    # Exemplo: 2 para "Aprovada", 3 para "Reprovada"
+    novo_status = 2 if aprovacao.aprovado else 3
+
+    # Atualize a requisição
+    requisicao.status_id = novo_status
+    requisicao.usuario_aprovador_id = current_user.id
+    requisicao.data_aprovacao = datetime.datetime.now(local_tz)
+
+    db.commit()
+    db.refresh(requisicao)
+
+    # Registre a ação no histórico de status, incluindo a observação (se houver)
+    historico = models.HistoricoStatusRequisicao(
+        requisicao_id=requisicao.id,
+        status_id=novo_status,
+        usuario_id=current_user.id,
+        data_alteracao=datetime.datetime.now(local_tz),
+        observacao_aprovacao=aprovacao.observacao
+    )
+    db.add(historico)
+    db.commit()
+
+    return requisicao
+
+
+@router.post("/{requisicao_id}/baixa", response_model=list[schemas.BaixaItemRequisicaoResponse])
+def realizar_baixa(requisicao_id: int, baixas: list[schemas.BaixaItemRequisicaoCreate], db: Session = Depends(get_db)):
+    requisicao = db.query(models.Requisicao).filter(models.Requisicao.id == requisicao_id).first()
+    if not requisicao:
+        raise HTTPException(status_code=404, detail="Requisição não encontrada")
+    if requisicao.status_id != 2:
+        raise HTTPException(status_code=400, detail="Somente requisições aprovadas podem ter baixa")
+
+    nova_baixa_registros = []
+    for baixa_data in baixas:
+        nova_baixa = models.BaixaItemRequisicao(
+            requisicao_id=requisicao_id,   # <-- Adicione essa linha
+            item_requisicao_id=baixa_data.item_requisicao_id,
+            usuario_baixa_id=baixa_data.usuario_baixa_id,
+            quantidade_baixada=baixa_data.quantidade_baixada,
+            data_baixa=datetime.datetime.now(local_tz)
+        )
+        db.add(nova_baixa)
+        nova_baixa_registros.append(nova_baixa)
+    db.commit()
+    for baixa in nova_baixa_registros:
+        db.refresh(baixa)
+    return nova_baixa_registros
