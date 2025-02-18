@@ -1,10 +1,9 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, date
 
 
-
-# 📌 SCHEMA PARA GERENCIAL OBRA
+# SCHEMA PARA GERENCIAL OBRA
 class GerencialObraBase(BaseModel):
     data_fechamento: datetime
     codigo_projeto: str
@@ -51,7 +50,7 @@ class GerencialObraResponse(GerencialObraBase):
         from_attributes = True
 
 
-# 📌 SCHEMAS PARA BAIXA DE ITENS
+# SCHEMAS PARA BAIXA DE ITENS
 class BaixaItemRequisicaoBase(BaseModel):
     usuario_baixa_id: int = Field(..., description="ID do usuário que realizou a baixa")
     quantidade_baixada: float = Field(..., gt=0, description="Quantidade de itens baixados")
@@ -69,7 +68,7 @@ class BaixaItemRequisicaoResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# 📌 SCHEMAS PARA ITENS DA REQUISIÇÃO
+# SCHEMAS PARA ITENS DA REQUISIÇÃO
 class ItensRequisicaoBase(BaseModel):
     subgrupo_1: str = Field(..., min_length=3, max_length=255)
     subgrupo_2: str = Field(..., min_length=3, max_length=255)
@@ -77,7 +76,7 @@ class ItensRequisicaoBase(BaseModel):
     servico: str = Field(..., min_length=3, max_length=255)
     descricao: str = Field(..., min_length=3, max_length=255)
     unidade_medida: str = Field(..., min_length=1, max_length=10)
-    quantidade_requisitada: float = Field(..., gt=0)  # Não pode ser 0 ou negativo
+    quantidade_requisitada: float = Field(..., gt=0)  
     local_aplicacao: str = Field(..., min_length=3, max_length=255)
 
 class ItensRequisicaoCreate(ItensRequisicaoBase):
@@ -86,14 +85,14 @@ class ItensRequisicaoCreate(ItensRequisicaoBase):
 class ItensRequisicaoResponse(ItensRequisicaoBase):
     id: int
     requisicao_id: int
-    baixas: Optional[List[BaixaItemRequisicaoResponse]] = []  # <-- Adicionado
+    baixas: Optional[List[BaixaItemRequisicaoResponse]] = []  
 
     class Config:
         from_attributes = True
 
 
 
-# 📌 SCHEMAS PARA USUÁRIOS
+# SCHEMAS PARA USUÁRIOS
 class UsuarioBase(BaseModel):
     nome: str
     email: str
@@ -113,19 +112,19 @@ class UsuarioResponse(BaseModel):
     cargo: Optional[str] = None
     codigo_projeto: str
     ativo: bool
-    token: Optional[str] = None  # Adicione esse campo
+    token: Optional[str] = None  
 
     class Config:
         from_attributes = True
 
-class RequisicaoCreate(BaseModel):  # 🛠️ Herda diretamente de BaseModel
+class RequisicaoCreate(BaseModel):  
     usuario_id: int
     codigo_projeto: str
     empresa_id: int
     status_id: int
-    justificativa: Optional[str] = None  # Certifique-se que seja realmente opcional
+    justificativa: Optional[str] = None 
+    data_programacao_subida: date  
 
-# Novo schema para o usuário criador (apenas ID e nome)
 class UsuarioCriadorResponse(BaseModel):
     id: int
     nome: str
@@ -134,7 +133,7 @@ class UsuarioCriadorResponse(BaseModel):
         from_attributes = True
 
 
-# 📌 SCHEMAS PARA EMPRESAS
+# SCHEMAS PARA EMPRESAS
 class EmpresaBase(BaseModel):
     nome: str
     cnpj: Optional[str] = None
@@ -156,7 +155,7 @@ class EmpresaResponseForRequisicao(BaseModel):
         from_attributes = True
 
 
-# 📌 SCHEMAS PARA STATUS DE REQUISIÇÃO
+# SCHEMAS PARA STATUS DE REQUISIÇÃO
 class StatusRequisicaoBase(BaseModel):
     descricao: str
 
@@ -167,7 +166,7 @@ class StatusRequisicaoResponse(StatusRequisicaoBase):
         from_attributes = True
 
 
-# 📌 SCHEMAS PARA HISTÓRICO DE STATUS
+# SCHEMAS PARA HISTÓRICO DE STATUS
 class HistoricoStatusRequisicaoBase(BaseModel):
     requisicao_id: int
     status_id: int
@@ -185,7 +184,7 @@ class HistoricoStatusRequisicaoResponse(HistoricoStatusRequisicaoBase):
         from_attributes = True
 
 
-# 📌 SCHEMAS PARA OBRAS E LOCAIS DE APLICAÇÃO
+# SCHEMAS PARA OBRAS E LOCAIS DE APLICAÇÃO
 class ObraBase(BaseModel):
     codigo_projeto: str
     nome: str
@@ -205,7 +204,7 @@ class LocalAplicacaoResponse(LocalAplicacaoBase):
         from_attributes = True
 
 
-# 📌 SCHEMA PARA AUTENTICAÇÃO
+# SCHEMA PARA AUTENTICAÇÃO
 class LoginRequest(BaseModel):
     username: str
     password: str
@@ -216,22 +215,24 @@ class AprovacaoRequisicao(BaseModel):
     observacao: Optional[str] = None
 
 
-# 📌 SCHEMAS PARA REQUISIÇÕES
+# SCHEMAS PARA REQUISIÇÕES
 class RequisicaoBase(BaseModel):
-    usuario_id: Optional[int]
-    usuario_aprovador_id: Optional[int]
+    usuario_id: Optional[int] = None
+    usuario_aprovador_id: Optional[int] = None
     codigo_projeto: str
     empresa_id: int
     status_id: int
-    justificativa: Optional[str]
-    data_aprovacao: Optional[datetime]
+    justificativa: Optional[str] = None
+    data_aprovacao: Optional[datetime] = None
 
 class RequisicaoResponse(RequisicaoBase):
     id: int
     data_criacao: datetime = Field(default_factory=datetime.utcnow)
+    data_programacao_subida: Optional[date] = None
     itens: List[ItensRequisicaoResponse] = []
     usuario_criador: Optional[UsuarioCriadorResponse] = None
     empresa: Optional[EmpresaResponseForRequisicao] = None
+    status: Optional[StatusRequisicaoResponse] = None
 
     class Config:
         from_attributes = True

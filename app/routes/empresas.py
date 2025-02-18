@@ -9,7 +9,7 @@ router = APIRouter(
     tags=["Empresas"]
 )
 
-# ✅ 1️⃣ Listar todas as empresas
+#  Listar todas as empresas
 @router.get("/", response_model=List[schemas.EmpresaResponse])
 def listar_empresas(db: Session = Depends(get_db)):
     empresas = db.query(models.Empresa).all()
@@ -18,7 +18,7 @@ def listar_empresas(db: Session = Depends(get_db)):
     return empresas
 
 
-# ✅ 2️⃣ Buscar uma empresa por ID
+# Buscar uma empresa por ID
 @router.get("/{empresa_id}", response_model=schemas.EmpresaResponse)
 def buscar_empresa(empresa_id: int, db: Session = Depends(get_db)):
     empresa = db.query(models.Empresa).filter(models.Empresa.id == empresa_id).first()
@@ -27,7 +27,7 @@ def buscar_empresa(empresa_id: int, db: Session = Depends(get_db)):
     return empresa
 
 
-# ✅ 3️⃣ Criar uma nova empresa
+# Criar uma nova empresa
 @router.post("/", response_model=schemas.EmpresaResponse, status_code=201)
 def criar_empresa(empresa: schemas.EmpresaBase, db: Session = Depends(get_db)):
     nova_empresa = models.Empresa(
@@ -43,7 +43,7 @@ def criar_empresa(empresa: schemas.EmpresaBase, db: Session = Depends(get_db)):
     return nova_empresa
 
 
-# ✅ 4️⃣ Atualizar uma empresa
+# Atualizar uma empresa
 @router.put("/{empresa_id}", response_model=schemas.EmpresaResponse)
 def atualizar_empresa(empresa_id: int, empresa_update: schemas.EmpresaBase, db: Session = Depends(get_db)):
     empresa = db.query(models.Empresa).filter(models.Empresa.id == empresa_id).first()
@@ -60,7 +60,7 @@ def atualizar_empresa(empresa_id: int, empresa_update: schemas.EmpresaBase, db: 
     return empresa
 
 
-# ✅ 5️⃣ Deletar uma empresa
+# Deletar uma empresa
 @router.delete("/{empresa_id}", response_model=dict)
 def deletar_empresa(empresa_id: int, db: Session = Depends(get_db)):
     empresa = db.query(models.Empresa).filter(models.Empresa.id == empresa_id).first()

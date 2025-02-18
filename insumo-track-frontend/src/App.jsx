@@ -1,12 +1,13 @@
-// App.jsx
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 
 import Login from "./pages/Login";
+import Menu from "./pages/Menu"; // Página de menu com os botões
 import CreateRequisicao from "./pages/CreateRequisicao";
 import ApprovalRequisicao from "./pages/ApprovalRequisicao";
-import BaixaItensRequisicao from "./pages/BaixaItensRequisicao"; // Importa a nova página
+import BaixaItensRequisicao from "./pages/BaixaItensRequisicao";
+import FilterRequisicoes from "./pages/FilterRequisicoes";
 import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
@@ -14,25 +15,40 @@ function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route 
-          path="/criar-requisicao" 
+        <Route
+          path="/menu"
+          element={
+            <PrivateRoute>
+              <Menu />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/criar-requisicao"
           element={
             <PrivateRoute>
               <CreateRequisicao />
             </PrivateRoute>
           }
         />
-        <Route 
-          path="/aprovar-requisicao" 
+        <Route
+          path="/aprovar-requisicao"
           element={
             <PrivateRoute>
               <ApprovalRequisicao />
             </PrivateRoute>
           }
         />
-        {/* Nova rota para o almoxarifado */}
-        <Route 
-          path="/baixa-itens" 
+        <Route
+          path="/fitrar-requisicoes"
+          element={
+            <PrivateRoute>
+              <FilterRequisicoes />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/baixa-itens"
           element={
             <PrivateRoute>
               <BaixaItensRequisicao />

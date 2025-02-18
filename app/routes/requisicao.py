@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
-import datetime
+from datetime import date, datetime, time
 from pydantic import ValidationError
 import json
 from sqlalchemy.exc import SQLAlchemyError
 from pytz import timezone
 from app.routes.auth import get_current_user
 from sqlalchemy.orm import joinedload
+from typing import List, Optional
 
 
 local_tz = timezone("America/Sao_Paulo")
@@ -18,7 +19,6 @@ router = APIRouter(
     tags=["Requisições"]
 )
 
-# ✅ Criar uma requisição (CREATE)
 @router.post("/", response_model=schemas.RequisicaoResponse)
 def criar_requisicao(requisicao: schemas.RequisicaoCreate, db: Session = Depends(get_db)):
     try:
@@ -33,13 +33,13 @@ def criar_requisicao(requisicao: schemas.RequisicaoCreate, db: Session = Depends
             status_id=requisicao.status_id,
             justificativa=requisicao.justificativa,
             data_criacao=datetime.datetime.now(local_tz),
+            data_programacao_subida=requisicao.data_programacao_subida,
         )
 
         db.add(nova_requisicao)
         db.commit()
         db.refresh(nova_requisicao)
 
-        # Criar histórico de status
         historico = models.HistoricoStatusRequisicao(
             requisicao_id=nova_requisicao.id,
             status_id=nova_requisicao.status_id,
@@ -72,6 +72,68 @@ def criar_requisicao(requisicao: schemas.RequisicaoCreate, db: Session = Depends
 def listar_requisicoes(db: Session = Depends(get_db)):
     return db.query(models.Requisicao).all()
 
+
+@router.get("/filter", response_model=list[schemas.RequisicaoResponse])
+def filtrar_requisicoes(
+    req_id: Optional[int] = Query(None, description="Número da Requisição"),
+    data_criacao_inicio: Optional[date] = Query(None),
+    data_criacao_fim: Optional[date] = Query(None),
+    empresa: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    data_programacao_subida_inicio: Optional[date] = Query(None),
+    data_programacao_subida_fim: Optional[date] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user),
+):
+    query = db.query(models.Requisicao)
+
+    # Se req_id estiver presente, retorna somente a requisição com esse ID
+    if req_id is not None:
+        requisicao = query\
+            .options(
+                joinedload(models.Requisicao.status),
+                joinedload(models.Requisicao.empresa)
+            )\
+            .filter(models.Requisicao.id == req_id)\
+            .first()
+
+        if not requisicao:
+            raise HTTPException(status_code=404, detail="Nenhuma requisição encontrada com o ID informado")
+
+        # Retorna a lista com apenas um item (a requisição)
+        return [requisicao]
+
+    # Caso req_id não esteja presente, aplica os outros filtros
+    # Filtro por data de criação
+    if data_criacao_inicio:
+        dt_inicio = datetime.combine(data_criacao_inicio, time.min)
+        query = query.filter(models.Requisicao.data_criacao >= dt_inicio)
+    if data_criacao_fim:
+        dt_fim = datetime.combine(data_criacao_fim, time.max)
+        query = query.filter(models.Requisicao.data_criacao <= dt_fim)
+
+    # Filtro por data de programação de subida
+    if data_programacao_subida_inicio:
+        query = query.filter(models.Requisicao.data_programacao_subida >= data_programacao_subida_inicio)
+    if data_programacao_subida_fim:
+        query = query.filter(models.Requisicao.data_programacao_subida <= data_programacao_subida_fim)
+
+    # Filtro por empresa (nome)
+    if empresa:
+        query = query.join(models.Empresa).filter(models.Empresa.nome.ilike(f"%{empresa}%"))
+
+    # Filtro por status (descrição)
+    if status:
+        query = query.join(models.StatusRequisicao).filter(models.StatusRequisicao.descricao.ilike(f"%{status}%"))
+
+    requisicoes = query\
+        .options(joinedload(models.Requisicao.status), joinedload(models.Requisicao.empresa))\
+        .all()
+
+    if not requisicoes:
+        raise HTTPException(status_code=404, detail="Nenhuma requisição encontrada com os filtros informados")
+
+    return requisicoes
 
 # ✅ Buscar uma requisição por ID (READ)
 @router.get("/{requisicao_id}", response_model=schemas.RequisicaoResponse)
@@ -224,7 +286,7 @@ def dar_baixa_item(
         item_requisicao_id=item_id,
         usuario_baixa_id=baixa_data.usuario_baixa_id,
         quantidade_baixada=baixa_data.quantidade_baixada,
-        data_baixa=datetime.datetime.now(local_tz)
+        data_baixa=datetime.now(local_tz)
     )
 
     db.add(nova_baixa)
@@ -257,7 +319,7 @@ def aprovar_requisicao(
     # Atualize a requisição
     requisicao.status_id = novo_status
     requisicao.usuario_aprovador_id = current_user.id
-    requisicao.data_aprovacao = datetime.datetime.now(local_tz)
+    requisicao.data_aprovacao = datetime.now(local_tz)
 
     db.commit()
     db.refresh(requisicao)
@@ -267,7 +329,7 @@ def aprovar_requisicao(
         requisicao_id=requisicao.id,
         status_id=novo_status,
         usuario_id=current_user.id,
-        data_alteracao=datetime.datetime.now(local_tz),
+        data_alteracao=datetime.now(local_tz),
         observacao_aprovacao=aprovacao.observacao
     )
     db.add(historico)
@@ -291,7 +353,7 @@ def realizar_baixa(requisicao_id: int, baixas: list[schemas.BaixaItemRequisicaoC
             item_requisicao_id=baixa_data.item_requisicao_id,
             usuario_baixa_id=baixa_data.usuario_baixa_id,
             quantidade_baixada=baixa_data.quantidade_baixada,
-            data_baixa=datetime.datetime.now(local_tz)
+            data_baixa=datetime.now(local_tz)
         )
         db.add(nova_baixa)
         nova_baixa_registros.append(nova_baixa)
@@ -299,3 +361,4 @@ def realizar_baixa(requisicao_id: int, baixas: list[schemas.BaixaItemRequisicaoC
     for baixa in nova_baixa_registros:
         db.refresh(baixa)
     return nova_baixa_registros
+

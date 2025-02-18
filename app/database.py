@@ -14,15 +14,12 @@ DB_HOST = os.getenv("DB_HOST")
 DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
 DB_NAME = os.getenv("DB_NAME")
-DB_PORT = os.getenv("DB_PORT", "5432")  # Porta padrão do PostgreSQL
+DB_PORT = os.getenv("DB_PORT", "5432") 
 
-# Codificar a senha para evitar problemas com caracteres especiais
 DB_PASS_ENCODED = urllib.parse.quote(DB_PASS)
 
-# Construir a URL de conexão para PostgreSQL
 DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS_ENCODED}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-# Criar engine do SQLAlchemy
 engine = create_engine(
     DATABASE_URL,
     pool_size=10,

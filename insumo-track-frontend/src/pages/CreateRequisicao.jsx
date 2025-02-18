@@ -9,6 +9,8 @@ const CreateRequisicao = () => {
   // ======================
   // Estados Gerais
   // ======================
+  const [dataProgramacaoSubida, setDataProgramacaoSubida] = useState("");
+
   const [nomeObra, setNomeObra] = useState("");
   const [novaRequisicaoCriada, setNovaRequisicaoCriada] = useState(null);
   const [mostrarResumo, setMostrarResumo] = useState(false);
@@ -372,6 +374,7 @@ const CreateRequisicao = () => {
       empresa_id: parseInt(empresaSelecionada) || 0,
       status_id: statusId,
       justificativa: justificativa || "",
+      data_programacao_subida: dataProgramacaoSubida,
     };
 
     try {
@@ -592,6 +595,16 @@ const CreateRequisicao = () => {
                 disabled={classificacaoConfirmada}
               />
             </div>
+          </div>
+          <div style={{ ...labelContainerStyle, marginBottom: "16px" }}>
+            <label>Data programação pré-carga:</label>
+            <input
+              type="date"
+              value={dataProgramacaoSubida}
+              onChange={(e) => setDataProgramacaoSubida(e.target.value)}
+              style={inputStyle}
+              required
+            />
           </div>
           {/* Apenas o botão Confirmar nesta seção */}
           {!classificacaoConfirmada && (

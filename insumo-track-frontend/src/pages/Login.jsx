@@ -14,7 +14,8 @@ const Login = () => {
     e.preventDefault();
     try {
       await login(email, password);
-      const from = location.state?.from?.pathname || "/criar-requisicao";
+      // Redireciona para a página de menu ("/menu") por padrão
+      const from = location.state?.from?.pathname || "/menu";
       navigate(from, { replace: true });
     } catch (error) {
       console.error("Erro no login", error);

@@ -1,4 +1,3 @@
-# app/routers/auth.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer
@@ -7,8 +6,6 @@ import jwt
 import datetime
 from dotenv import load_dotenv
 import os
-
-
 from app.database import get_db
 from app.models import Usuario, Obra
 from app.schemas import LoginRequest, UsuarioResponse
@@ -18,7 +15,7 @@ router = APIRouter(
     tags=["Autenticação"]
 )
 
-load_dotenv()  # Carrega as variáveis do .env
+load_dotenv() 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
@@ -41,7 +38,7 @@ def create_access_token(data: dict, expires_delta: datetime.timedelta = None):
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
-# ✅ Login de Usuário
+# Login de Usuário
 @router.post("/login", response_model=UsuarioResponse)
 def login(login_request: LoginRequest, db: Session = Depends(get_db)):
     print("Recebido:", login_request.username, login_request.password)
@@ -74,7 +71,7 @@ def login(login_request: LoginRequest, db: Session = Depends(get_db)):
         cargo=user.cargo,
         codigo_projeto=user.codigo_projeto,
         ativo=user.ativo,
-        token=access_token  # Incluindo o token na resposta
+        token=access_token  
     )
 
 

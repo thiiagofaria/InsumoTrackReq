@@ -85,6 +85,7 @@ class Requisicao(Base):
     status_id = Column(Integer, ForeignKey("status_requisicao.id", ondelete="CASCADE"), nullable=False)
     justificativa = Column(Text, nullable=True)
     data_aprovacao = data_aprovacao = Column(DateTime, nullable=True)
+    data_programacao_subida = Column(DateTime, nullable=True)
 
     # Relacionamentos
     itens = relationship("ItensRequisicao", back_populates="requisicao", cascade="all, delete-orphan")

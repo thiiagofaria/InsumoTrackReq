@@ -1,17 +1,21 @@
-// pages/BaixaItensRequisicao.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const BaixaItensRequisicao = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
   const [reqId, setReqId] = useState("");
   const [requisicao, setRequisicao] = useState(null);
   const [baixasInput, setBaixasInput] = useState({}); // { item_id: novaBaixa }
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resumo, setResumo] = useState(null); // Resumo dos itens baixados
+  // "resumo" conterá a resposta do endpoint de baixa (lista dos itens baixados)
+  const [resumo, setResumo] = useState(null);
 
-  // Estilos (ajuste conforme sua necessidade)
+  // Estilos
   const containerStyle = {
     maxWidth: "900px",
     margin: "30px auto",
@@ -25,25 +29,6 @@ const BaixaItensRequisicao = () => {
     marginBottom: "20px",
   };
 
-  const formRowStyle = {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "12px",
-    marginBottom: "12px",
-  };
-
-  const labelContainerStyle = {
-    display: "flex",
-    flexDirection: "column",
-    flex: "1 1 200px",
-  };
-
-  const inputStyle = {
-    padding: "6px",
-    borderRadius: "4px",
-    border: "1px solid #ccc",
-  };
-
   const buttonStyle = {
     padding: "8px 16px",
     backgroundColor: "#007bff",
@@ -51,6 +36,7 @@ const BaixaItensRequisicao = () => {
     border: "none",
     borderRadius: "4px",
     cursor: "pointer",
+    marginRight: "10px",
   };
 
   const thtdStyle = {
@@ -66,18 +52,43 @@ const BaixaItensRequisicao = () => {
     backgroundColor: "#fff",
   };
 
-  // Função para buscar a requisição pelo ID
-  const handleBuscar = async () => {
+  const inputStyle = {
+    padding: "6px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    width: "80px",
+    textAlign: "center",
+  };
+
+  // --------------------------
+  // useEffect para buscar reqId da query string
+  // --------------------------
+  useEffect(() => {
+    const paramId = searchParams.get("reqId");
+    if (paramId) {
+      setReqId(paramId);
+      handleBuscar(paramId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // --------------------------
+  // Função para buscar a requisição
+  // --------------------------
+  const handleBuscar = async (forcadoId = null) => {
+    const idBusca = forcadoId || reqId;
+    if (!idBusca) return;
     setLoading(true);
     setError("");
     setRequisicao(null);
     setBaixasInput({});
     setResumo(null);
+
     try {
-      const res = await fetch(`http://127.0.0.1:8000/requisicoes/${reqId}`, {
+      const res = await fetch(`http://127.0.0.1:8000/requisicoes/${idBusca}`, {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${user.token}`,
+          Authorization: `Bearer ${user.token}`,
         },
       });
       if (!res.ok) {
@@ -85,7 +96,8 @@ const BaixaItensRequisicao = () => {
         throw new Error(err.detail || "Requisição não encontrada");
       }
       const data = await res.json();
-      // Somente permitir requisições aprovadas (status 2)
+
+      // Permite somente requisições aprovadas (status_id = 2)
       if (data.status_id !== 2) {
         throw new Error(
           data.status_id === 1
@@ -101,18 +113,22 @@ const BaixaItensRequisicao = () => {
     }
   };
 
-  // Calcula o total já baixado e o saldo atual para um item
+  // --------------------------
+  // Calcula total baixado e saldo para cada item
+  // --------------------------
   const calcularBaixasESaldo = (item) => {
-    // Soma as quantidades já baixadas a partir do relacionamento "baixas"
-    const totalBaixado = item.baixas ? item.baixas.reduce((acc, baixa) => acc + baixa.quantidade_baixada, 0) : 0;
+    const totalBaixado = item.baixas
+      ? item.baixas.reduce((acc, baixa) => acc + baixa.quantidade_baixada, 0)
+      : 0;
     const saldoAtual = item.quantidade_requisitada - totalBaixado;
     return { totalBaixado, saldoAtual };
   };
 
-  // Atualiza a entrada de baixa para um item
+  // --------------------------
+  // Atualiza entrada de baixa
+  // --------------------------
   const handleInputBaixa = (itemId, value, saldoAtual) => {
     const novaBaixa = parseFloat(value);
-    // Valida se o valor é um número, maior que zero e não ultrapassa o saldo atual
     if (isNaN(novaBaixa) || novaBaixa < 0) return;
     if (novaBaixa > saldoAtual) {
       alert("A quantidade para baixa não pode ser maior que o saldo atual.");
@@ -121,34 +137,39 @@ const BaixaItensRequisicao = () => {
     setBaixasInput({ ...baixasInput, [itemId]: novaBaixa });
   };
 
-  // Função para realizar a baixa (envia uma única requisição com todos os itens)
+  // --------------------------
+  // Função para realizar a baixa
+  // --------------------------
   const handleRealizarBaixa = async () => {
     if (!requisicao) return;
+
+    // Monta o payload somente com as baixas > 0
     const payload = requisicao.itens
       .filter((item) => {
         const novaBaixa = baixasInput[item.id];
         return novaBaixa && novaBaixa > 0;
       })
       .map((item) => ({
-        requisicao_id: requisicao.id, // Certifique-se de enviar o requisicao_id
+        requisicao_id: requisicao.id,
         item_requisicao_id: item.id,
         usuario_baixa_id: user.id,
         quantidade_baixada: parseFloat(baixasInput[item.id]),
       }));
-  
+
     if (payload.length === 0) {
       alert("Nenhuma quantidade para baixa foi informada.");
       return;
     }
-  
+
     setLoading(true);
     setError("");
+
     try {
       const res = await fetch(`http://127.0.0.1:8000/requisicoes/${requisicao.id}/baixa`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${user.token}`,
+          Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify(payload),
       });
@@ -156,10 +177,11 @@ const BaixaItensRequisicao = () => {
         const errData = await res.json();
         throw new Error(errData.detail || "Erro ao realizar a baixa");
       }
+
+      // "result" é a lista dos itens baixados, cada um com data_baixa
       const result = await res.json();
-      setResumo(result); // Armazena o resultado para exibição/impressão
-      alert("Baixa realizada com sucesso!");
-      // Não resetamos imediatamente os dados, para que o resumo permaneça na tela.
+      setResumo(result); // Guarda o resumo para exibição/impressão
+
     } catch (e) {
       setError(e.message);
     } finally {
@@ -167,166 +189,210 @@ const BaixaItensRequisicao = () => {
     }
   };
 
-  // Função para cancelar e resetar a tela
-  const handleCancelar = () => {
-    setReqId("");
-    setRequisicao(null);
-    setBaixasInput({});
-    setError("");
-    setResumo(null);
+  // --------------------------
+  // Função para voltar à tela de filtragem
+  // --------------------------
+  const handleVoltar = () => {
+    navigate("/filtrar-requisicoes");
   };
 
+  // --------------------------
+  // Renderização do resumo para impressão
+  // --------------------------
+  const renderResumoImpressao = () => {
+    // Mapeia cada baixa do "resumo" para exibir descrição, quantidade e data/hora da baixa
+    const itensResumo = resumo.map((baixa) => {
+      const itemEncontrado = requisicao.itens.find((it) => it.id === baixa.item_requisicao_id);
+      return {
+        descricao: itemEncontrado ? itemEncontrado.descricao : "N/A",
+        quantidade_baixada: baixa.quantidade_baixada,
+        data_baixa: baixa.data_baixa,
+      };
+    });
+
+    return (
+      <div>
+        <h2>Detalhes da Requisição</h2>
+        <p><strong>ID:</strong> {requisicao.id}</p>
+        <p>
+          <strong>Data:</strong>{" "}
+          {new Date(requisicao.data_criacao).toLocaleString("pt-BR", {
+            timeZone: "America/Sao_Paulo",
+          })}
+        </p>
+        <p>
+          <strong>Usuário Criador:</strong> {requisicao.usuario_criador?.nome || "N/A"}
+        </p>
+        <p>
+          <strong>Empresa:</strong> {requisicao.empresa?.nome || "N/A"}
+        </p>
+        <p>
+          <strong>Observação da Requisição:</strong> {requisicao.justificativa || "N/A"}
+        </p>
+
+        <h3>Itens Baixados</h3>
+        <table style={{ ...tableStyle, marginTop: "20px" }}>
+          <thead>
+            <tr style={{ backgroundColor: "#007bff", color: "#fff", textAlign: "left" }}>
+              <th style={thtdStyle}>Material</th>
+              <th style={thtdStyle}>Quantidade Baixada</th>
+              <th style={thtdStyle}>Data/Hora da Baixa</th>
+            </tr>
+          </thead>
+          <tbody>
+            {itensResumo.map((item, index) => (
+              <tr key={index}>
+                <td style={thtdStyle}>{item.descricao}</td>
+                <td style={thtdStyle}>{item.quantidade_baixada}</td>
+                <td style={thtdStyle}>
+                  {new Date(item.data_baixa).toLocaleString("pt-BR", {
+                    timeZone: "America/Sao_Paulo",
+                  })}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  // --------------------------
+  // Renderização principal
+  // --------------------------
   return (
     <div style={containerStyle}>
+      <h1 style={{ textAlign: "center", marginBottom: "1rem" }}>
+        Baixa de Itens da Requisição
+      </h1>
+
+      {loading && <p>Carregando...</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      {!requisicao && !loading && !error && (
+        <p>Nenhuma requisição carregada. Por favor, volte e selecione uma requisição.</p>
+      )}
+
+      {/* Se já houver resumo (itens baixados), mostra a tela de resumo para impressão */}
       {resumo ? (
-        // Se o resumo existir, mostra apenas a área de resumo
         <div style={cardStyle}>
-          <h2>Resumo da Baixa</h2>
-          <table style={tableStyle}>
-            <thead>
-              <tr style={{ backgroundColor: "#007bff", color: "#fff", textAlign: "left" }}>
-                <th style={thtdStyle}>Material</th>
-                <th style={thtdStyle}>Quantidade Baixada</th>
-                <th style={thtdStyle}>Data da Baixa</th>
-              </tr>
-            </thead>
-            <tbody>
-              {resumo.map((baixa) => {
-                const item = requisicao.itens.find((it) => it.id === baixa.item_requisicao_id);
-                return (
-                  <tr key={baixa.id} style={{ borderBottom: "1px solid #ddd" }}>
-                    <td style={thtdStyle}>{item ? item.descricao : "N/A"}</td>
-                    <td style={thtdStyle}>{baixa.quantidade_baixada}</td>
-                    <td style={thtdStyle}>
-                      {new Date(baixa.data_baixa).toLocaleString("pt-BR", {
-                        timeZone: "America/Sao_Paulo",
-                      })}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <button onClick={() => window.print()} style={{ ...buttonStyle, marginTop: "10px" }}>
-            Imprimir Resumo
-          </button>
-          <button onClick={handleCancelar} style={{ ...buttonStyle, marginTop: "10px", marginLeft: "10px" }}>
-            Nova Baixa
-          </button>
+          {renderResumoImpressao()}
+
+          <div style={{ marginTop: "20px" }}>
+            <button
+              onClick={() => {
+                window.print();
+              }}
+              style={buttonStyle}
+            >
+              Imprimir Resumo
+            </button>
+            <button onClick={handleVoltar} style={buttonStyle}>
+              Voltar
+            </button>
+          </div>
         </div>
       ) : (
-        // Caso não haja resumo, exibe a tela completa para busca e baixa
-        <>
-          {/* Campo para buscar a requisição */}
+        // Senão, exibe a tela normal para dar baixa
+        requisicao && (
           <div style={cardStyle}>
-            <div style={formRowStyle}>
-              <div style={labelContainerStyle}>
-                <label>Número da Requisição:</label>
-                <input
-                  type="text"
-                  value={reqId}
-                  onChange={(e) => setReqId(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
-              <div style={labelContainerStyle}>
-                <label>&nbsp;</label>
-                <button onClick={handleBuscar} style={buttonStyle}>
-                  Buscar
-                </button>
-              </div>
+            <button onClick={handleVoltar} style={{ ...buttonStyle, marginBottom: "10px" }}>
+              Voltar
+            </button>
+
+            <h2>Detalhes da Requisição</h2>
+            <p><strong>ID:</strong> {requisicao.id}</p>
+            <p>
+              <strong>Data:</strong>{" "}
+              {new Date(requisicao.data_criacao).toLocaleString("pt-BR", {
+                timeZone: "America/Sao_Paulo",
+              })}
+            </p>
+            <p>
+              <strong>Usuário Criador:</strong> {requisicao.usuario_criador?.nome || "N/A"}
+            </p>
+            <p>
+              <strong>Empresa:</strong> {requisicao.empresa?.nome || "N/A"}
+            </p>
+            <p>
+              <strong>Observação da Requisição:</strong> {requisicao.justificativa || "N/A"}
+            </p>
+
+            <h3>Itens da Requisição</h3>
+            {requisicao.itens && requisicao.itens.length > 0 ? (
+              <table style={tableStyle}>
+                <thead>
+                  <tr style={{ backgroundColor: "#007bff", color: "#fff", textAlign: "left" }}>
+                    <th style={thtdStyle}>Grupo de Serviço</th>
+                    <th style={thtdStyle}>Material</th>
+                    <th style={thtdStyle}>Unidade</th>
+                    <th style={{ ...thtdStyle, textAlign: "center" }}>Qtd Requisitada</th>
+                    <th style={thtdStyle}>Local de Aplicação</th>
+                    <th style={{ ...thtdStyle, textAlign: "center" }}>Total Baixado</th>
+                    <th style={{ ...thtdStyle, textAlign: "center" }}>Saldo Atual</th>
+                    <th style={{ ...thtdStyle, textAlign: "center" }}>Nova Baixa</th>
+                    <th style={{ ...thtdStyle, textAlign: "center" }}>Novo Saldo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requisicao.itens.map((item, index) => {
+                    const { totalBaixado, saldoAtual } = calcularBaixasESaldo(item);
+                    const novaBaixa = baixasInput[item.id] || 0;
+                    const novoSaldo = saldoAtual - novaBaixa;
+                    return (
+                      <tr
+                        key={index}
+                        style={{
+                          borderBottom: "1px solid #ddd",
+                          backgroundColor: index % 2 === 0 ? "#f2f2f2" : "white",
+                        }}
+                      >
+                        <td style={thtdStyle}>{item.subgrupo_2}</td>
+                        <td style={thtdStyle}>{item.descricao}</td>
+                        <td style={thtdStyle}>{item.unidade_medida}</td>
+                        <td style={{ ...thtdStyle, textAlign: "center" }}>
+                          {item.quantidade_requisitada}
+                        </td>
+                        <td style={thtdStyle}>{item.local_aplicacao}</td>
+                        <td style={{ ...thtdStyle, textAlign: "center" }}>
+                          {totalBaixado}
+                        </td>
+                        <td style={{ ...thtdStyle, textAlign: "center" }}>
+                          {saldoAtual}
+                        </td>
+                        <td style={{ ...thtdStyle, textAlign: "center" }}>
+                          <input
+                            type="number"
+                            min="0"
+                            max={saldoAtual}
+                            value={novaBaixa}
+                            onChange={(e) => handleInputBaixa(item.id, e.target.value, saldoAtual)}
+                            style={inputStyle}
+                          />
+                        </td>
+                        <td style={{ ...thtdStyle, textAlign: "center" }}>{novoSaldo}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <p>Nenhum item encontrado.</p>
+            )}
+
+            <div style={{ marginTop: "20px" }}>
+              <button
+                onClick={handleRealizarBaixa}
+                style={{ ...buttonStyle, marginRight: "10px" }}
+              >
+                Realizar Baixa
+              </button>
+              <button onClick={handleVoltar} style={buttonStyle}>
+                Voltar
+              </button>
             </div>
-            {loading && <p>Carregando...</p>}
-            {error && <p style={{ color: "red" }}>{error}</p>}
           </div>
-  
-          {/* Exibe os detalhes da requisição, se encontrada */}
-          {requisicao && (
-            <div style={cardStyle}>
-              <h2>Detalhes da Requisição</h2>
-              <p><strong>ID:</strong> {requisicao.id}</p>
-              <p>
-                <strong>Data:</strong>{" "}
-                {new Date(requisicao.data_criacao).toLocaleString("pt-BR", {
-                  timeZone: "America/Sao_Paulo",
-                })}
-              </p>
-              <p>
-                <strong>Usuário Criador:</strong> {requisicao.usuario_criador?.nome || "N/A"}
-              </p>
-              <p>
-                <strong>Empresa:</strong> {requisicao.empresa?.nome || "N/A"}
-              </p>
-              <p>
-                <strong>Observação da Requisição:</strong> {requisicao.justificativa || "N/A"}
-              </p>
-              <h3>Itens da Requisição</h3>
-              {requisicao.itens && requisicao.itens.length > 0 ? (
-                <table style={tableStyle}>
-                  <thead>
-                    <tr style={{ backgroundColor: "#007bff", color: "#fff", textAlign: "left" }}>
-                      <th style={thtdStyle}>Grupo de Serviço</th>
-                      <th style={thtdStyle}>Material</th>
-                      <th style={thtdStyle}>Unidade</th>
-                      <th style={{ ...thtdStyle, textAlign: "center" }}>Qtd Requisitada</th>
-                      <th style={thtdStyle}>Local de Aplicação</th>
-                      <th style={{ ...thtdStyle, textAlign: "center" }}>Total Baixado</th>
-                      <th style={{ ...thtdStyle, textAlign: "center" }}>Saldo Atual</th>
-                      <th style={{ ...thtdStyle, textAlign: "center" }}>Nova Baixa</th>
-                      <th style={{ ...thtdStyle, textAlign: "center" }}>Novo Saldo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {requisicao.itens.map((item, index) => {
-                      const { totalBaixado, saldoAtual } = calcularBaixasESaldo(item);
-                      const novaBaixa = baixasInput[item.id] || 0;
-                      const novoSaldo = saldoAtual - novaBaixa;
-                      return (
-                        <tr
-                          key={index}
-                          style={{
-                            borderBottom: "1px solid #ddd",
-                            backgroundColor: index % 2 === 0 ? "#f2f2f2" : "white",
-                          }}
-                        >
-                          <td style={thtdStyle}>{item.subgrupo_2}</td>
-                          <td style={thtdStyle}>{item.descricao}</td>
-                          <td style={thtdStyle}>{item.unidade_medida}</td>
-                          <td style={{ ...thtdStyle, textAlign: "center" }}>{item.quantidade_requisitada}</td>
-                          <td style={thtdStyle}>{item.local_aplicacao}</td>
-                          <td style={{ ...thtdStyle, textAlign: "center" }}>{totalBaixado}</td>
-                          <td style={{ ...thtdStyle, textAlign: "center" }}>{saldoAtual}</td>
-                          <td style={{ ...thtdStyle, textAlign: "center" }}>
-                            <input
-                              type="number"
-                              min="0"
-                              max={saldoAtual}
-                              value={baixasInput[item.id] || ""}
-                              onChange={(e) => handleInputBaixa(item.id, e.target.value, saldoAtual)}
-                              style={{ ...inputStyle, width: "80px", textAlign: "center" }}
-                            />
-                          </td>
-                          <td style={{ ...thtdStyle, textAlign: "center" }}>{novoSaldo}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              ) : (
-                <p>Nenhum item encontrado.</p>
-              )}
-  
-              <div style={{ marginTop: "20px" }}>
-                <button onClick={handleRealizarBaixa} style={{ ...buttonStyle, marginRight: "10px" }}>
-                  Realizar Baixa
-                </button>
-                <button onClick={handleCancelar} style={buttonStyle}>
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          )}
-        </>
+        )
       )}
     </div>
   );
