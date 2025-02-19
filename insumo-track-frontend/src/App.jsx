@@ -8,6 +8,8 @@ import CreateRequisicao from "./pages/CreateRequisicao";
 import ApprovalRequisicao from "./pages/ApprovalRequisicao";
 import BaixaItensRequisicao from "./pages/BaixaItensRequisicao";
 import FilterRequisicoes from "./pages/FilterRequisicoes";
+import UploadGerencial from "./pages/UploadGerencial";
+import VisualizarRequisicao from "./pages/VisualizarRequisicao";
 import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
@@ -32,7 +34,7 @@ function App() {
           }
         />
         <Route
-          path="/aprovar-requisicao"
+          path="/approval-requisicao"
           element={
             <PrivateRoute>
               <ApprovalRequisicao />
@@ -40,7 +42,7 @@ function App() {
           }
         />
         <Route
-          path="/fitrar-requisicoes"
+          path="/filtrar-requisicoes"
           element={
             <PrivateRoute>
               <FilterRequisicoes />
@@ -52,6 +54,22 @@ function App() {
           element={
             <PrivateRoute>
               <BaixaItensRequisicao />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/upload-gerencial"
+          element={
+            <PrivateRoute>
+              <UploadGerencial />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/visualizar-requisicao"
+          element={
+            <PrivateRoute>
+              <VisualizarRequisicao />
             </PrivateRoute>
           }
         />

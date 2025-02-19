@@ -228,7 +228,7 @@ class RequisicaoBase(BaseModel):
 class RequisicaoResponse(RequisicaoBase):
     id: int
     data_criacao: datetime = Field(default_factory=datetime.utcnow)
-    data_programacao_subida: Optional[date] = None
+    data_programacao_subida: Optional[datetime] = None
     itens: List[ItensRequisicaoResponse] = []
     usuario_criador: Optional[UsuarioCriadorResponse] = None
     empresa: Optional[EmpresaResponseForRequisicao] = None

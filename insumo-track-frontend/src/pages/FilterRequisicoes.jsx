@@ -1,3 +1,4 @@
+// pages/FilterRequisicoes.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -24,16 +25,117 @@ function FilterRequisicoes() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Estilos simples
-  const containerStyle = { maxWidth: "900px", margin: "30px auto", fontFamily: "sans-serif" };
-  const cardStyle = { border: "1px solid #ddd", borderRadius: "6px", padding: "16px", marginBottom: "20px" };
-  const formRowStyle = { display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "12px" };
-  const labelContainerStyle = { display: "flex", flexDirection: "column", flex: "1 1 200px" };
-  const inputStyle = { padding: "6px", borderRadius: "4px", border: "1px solid #ccc" };
-  const buttonStyle = { padding: "8px 16px", backgroundColor: "#007bff", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" };
-  const thtdStyle = { border: "1px solid #ccc", padding: "8px", textAlign: "left" };
+  // ======================================================
+  // Estilos
+  // ======================================================
+  const containerStyle = {
+    maxWidth: "1000px",
+    margin: "30px auto",
+    fontFamily: "Arial, sans-serif",
+    padding: "0 20px"
+  };
 
-  // Carregar listas de empresas e status
+  const titleStyle = {
+    textAlign: "center",
+    marginBottom: "1rem",
+    fontSize: "1.8rem",
+    color: "#333"
+  };
+
+  const cardStyle = {
+    backgroundColor: "#fff",
+    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+    borderRadius: "8px",
+    padding: "20px",
+    marginBottom: "20px"
+  };
+
+  const formRowStyle = {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "12px",
+    marginBottom: "12px"
+  };
+
+  const labelContainerStyle = {
+    display: "flex",
+    flexDirection: "column",
+    flex: "1 1 200px"
+  };
+
+  const labelStyle = {
+    fontWeight: "bold",
+    marginBottom: "4px"
+  };
+
+  const inputStyle = {
+    padding: "6px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    fontSize: "0.95rem"
+  };
+
+  const buttonStyle = {
+    padding: "10px 20px",
+    backgroundColor: "#007bff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "1rem",
+    transition: "background-color 0.2s"
+  };
+
+  const tableStyle = {
+    width: "100%",
+    borderCollapse: "collapse",
+    marginTop: "10px",
+    fontSize: "0.95rem"
+  };
+
+  const tableHeaderStyle = {
+    backgroundColor: "#007bff",
+    color: "#fff",
+    textAlign: "left"
+  };
+
+  const thtdStyle = {
+    border: "1px solid #ccc",
+    padding: "8px"
+  };
+
+  // Ações
+  const actionButtonContainer = { display: "flex", gap: "8px" };
+  const actionButtonBase = {
+    padding: "6px 12px",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    transition: "background-color 0.2s"
+  };
+
+  const baixarButtonStyle = {
+    ...actionButtonBase,
+    backgroundColor: "#28a745",
+    color: "#fff"
+  };
+
+  const visualizarButtonStyle = {
+    ...actionButtonBase,
+    backgroundColor: "#17a2b8",
+    color: "#fff"
+  };
+
+  const acessarButtonStyle = {
+    ...actionButtonBase,
+    backgroundColor: "#ffc107",
+    color: "#000"
+  };
+
+  // ======================================================
+  // Efeitos: Carregar empresas e status
+  // ======================================================
   useEffect(() => {
     if (!user?.token) return;
 
@@ -66,7 +168,9 @@ function FilterRequisicoes() {
       .catch((err) => console.error("Erro ao buscar status:", err));
   }, [user?.token]);
 
-  // Função para filtrar requisições
+  // ======================================================
+  // Função de Filtro
+  // ======================================================
   const handleFilter = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -76,18 +180,27 @@ function FilterRequisicoes() {
     // Cria os parâmetros da query
     const params = new URLSearchParams();
 
-    // Se o número da requisição estiver preenchido, ele tem prioridade
-    // e todos os outros filtros são ignorados.
     if (numeroRequisicao.trim() !== "") {
       params.append("req_id", numeroRequisicao.trim());
     } else {
-      // Caso contrário, aplica os demais filtros
-      if (dataCriacaoInicio.trim() !== "") params.append("data_criacao_inicio", dataCriacaoInicio);
-      if (dataCriacaoFim.trim() !== "") params.append("data_criacao_fim", dataCriacaoFim);
-      if (empresaSelecionada.trim() !== "") params.append("empresa", empresaSelecionada);
-      if (statusSelecionado.trim() !== "") params.append("status", statusSelecionado);
-      if (dataProgSubidaInicio.trim() !== "") params.append("data_programacao_subida_inicio", dataProgSubidaInicio);
-      if (dataProgSubidaFim.trim() !== "") params.append("data_programacao_subida_fim", dataProgSubidaFim);
+      if (dataCriacaoInicio.trim() !== "") {
+        params.append("data_criacao_inicio", dataCriacaoInicio);
+      }
+      if (dataCriacaoFim.trim() !== "") {
+        params.append("data_criacao_fim", dataCriacaoFim);
+      }
+      if (empresaSelecionada.trim() !== "") {
+        params.append("empresa", empresaSelecionada);
+      }
+      if (statusSelecionado.trim() !== "") {
+        params.append("status", statusSelecionado);
+      }
+      if (dataProgSubidaInicio.trim() !== "") {
+        params.append("data_programacao_subida_inicio", dataProgSubidaInicio);
+      }
+      if (dataProgSubidaFim.trim() !== "") {
+        params.append("data_programacao_subida_fim", dataProgSubidaFim);
+      }
     }
 
     try {
@@ -110,22 +223,27 @@ function FilterRequisicoes() {
     }
   };
 
-  // Função para navegar para a tela de baixa
+  // ======================================================
+  // Ações de Navegação
+  // ======================================================
   const handleBaixarClick = (reqId) => {
     navigate(`/baixa-itens?reqId=${reqId}`);
   };
 
+  const handleAcessarClick = (reqId) => {
+    navigate(`/approval-requisicao?reqId=${reqId}`);
+  };
+
   return (
     <div style={containerStyle}>
-      <h1 style={{ textAlign: "center", marginBottom: "1rem" }}>Filtrar Requisições</h1>
+      <h1 style={titleStyle}>Filtrar Requisições</h1>
 
-      {/* Formulário de Filtros */}
+      {/* CARD DE FILTROS */}
       <div style={cardStyle}>
         <form onSubmit={handleFilter}>
-          {/* Linha 0: Número da Requisição */}
           <div style={formRowStyle}>
             <div style={labelContainerStyle}>
-              <label>Número da Requisição:</label>
+              <label style={labelStyle}>Número da Requisição:</label>
               <input
                 type="text"
                 value={numeroRequisicao}
@@ -135,10 +253,10 @@ function FilterRequisicoes() {
               />
             </div>
           </div>
-          {/* Linha 1: Data Criação Início/Fim */}
+
           <div style={formRowStyle}>
             <div style={labelContainerStyle}>
-              <label>Data Criação Início:</label>
+              <label style={labelStyle}>Data Criação Início:</label>
               <input
                 type="date"
                 value={dataCriacaoInicio}
@@ -147,7 +265,7 @@ function FilterRequisicoes() {
               />
             </div>
             <div style={labelContainerStyle}>
-              <label>Data Criação Fim:</label>
+              <label style={labelStyle}>Data Criação Fim:</label>
               <input
                 type="date"
                 value={dataCriacaoFim}
@@ -157,10 +275,9 @@ function FilterRequisicoes() {
             </div>
           </div>
 
-          {/* Linha 2: Empresa / Status */}
           <div style={formRowStyle}>
             <div style={labelContainerStyle}>
-              <label>Empresa:</label>
+              <label style={labelStyle}>Empresa:</label>
               <select
                 style={inputStyle}
                 value={empresaSelecionada}
@@ -175,7 +292,7 @@ function FilterRequisicoes() {
               </select>
             </div>
             <div style={labelContainerStyle}>
-              <label>Status:</label>
+              <label style={labelStyle}>Status:</label>
               <select
                 style={inputStyle}
                 value={statusSelecionado}
@@ -191,10 +308,9 @@ function FilterRequisicoes() {
             </div>
           </div>
 
-          {/* Linha 3: Data Prog. Subida Início/Fim */}
           <div style={formRowStyle}>
             <div style={labelContainerStyle}>
-              <label>Data Prog. Subida Início:</label>
+              <label style={labelStyle}>Data Prog. Subida Início:</label>
               <input
                 type="date"
                 value={dataProgSubidaInicio}
@@ -203,7 +319,7 @@ function FilterRequisicoes() {
               />
             </div>
             <div style={labelContainerStyle}>
-              <label>Data Prog. Subida Fim:</label>
+              <label style={labelStyle}>Data Prog. Subida Fim:</label>
               <input
                 type="date"
                 value={dataProgSubidaFim}
@@ -213,8 +329,7 @@ function FilterRequisicoes() {
             </div>
           </div>
 
-          {/* Botão Filtrar */}
-          <div style={{ textAlign: "right" }}>
+          <div style={{ textAlign: "right", marginTop: "10px" }}>
             <button type="submit" style={buttonStyle}>
               Filtrar
             </button>
@@ -222,44 +337,67 @@ function FilterRequisicoes() {
         </form>
       </div>
 
-      {/* Mensagens de loading e erro */}
-      {loading && <p>Carregando...</p>}
+      {/* MENSAGENS DE FEEDBACK */}
+      {loading && <p style={{ fontStyle: "italic" }}>Carregando...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {/* Exibição dos resultados */}
+      {/* TABELA DE RESULTADOS */}
       {requisicoes.length > 0 && (
         <div style={cardStyle}>
-          <h2>Requisições Encontradas</h2>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <h2 style={{ marginTop: 0, marginBottom: "16px" }}>Requisições Encontradas</h2>
+          <table style={tableStyle}>
             <thead>
-              <tr style={{ backgroundColor: "#007bff", color: "#fff", textAlign: "left" }}>
+              <tr style={tableHeaderStyle}>
                 <th style={thtdStyle}>ID</th>
                 <th style={thtdStyle}>Data Criação</th>
                 <th style={thtdStyle}>Empresa</th>
+                <th style={thtdStyle}>Usuário Criado</th>
                 <th style={thtdStyle}>Status</th>
+                <th style={thtdStyle}>Local de aplicação</th>
                 <th style={thtdStyle}>Data Prog. Subida</th>
-                <th style={thtdStyle}>Observação</th>
                 <th style={thtdStyle}>Ações</th>
               </tr>
             </thead>
             <tbody>
-              {requisicoes.map((req) => (
-                <tr key={req.id}>
+              {requisicoes.map((req, index) => (
+                <tr
+                  key={req.id}
+                  // Zebra stripes: cor de fundo diferente para linhas pares e ímpares
+                  style={{
+                    backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#ffffff"
+                  }}
+                >
                   <td style={thtdStyle}>{req.id}</td>
                   <td style={thtdStyle}>
-                    {new Date(req.data_criacao).toLocaleString("pt-BR")}
+                    {new Date(req.data_criacao).toLocaleDateString("pt-BR")}
                   </td>
                   <td style={thtdStyle}>{req.empresa?.nome || "N/A"}</td>
+                  <td style={thtdStyle}>{req.usuario_criador?.nome || "N/A"}</td>
                   <td style={thtdStyle}>{req.status?.descricao || "N/A"}</td>
-                  <td style={thtdStyle}>{req.data_programacao_subida || ""}</td>
-                  <td style={thtdStyle}>{req.justificativa || ""}</td>
+                  <td style={thtdStyle}>{req.local_aplicacao || "N/A"}</td>
                   <td style={thtdStyle}>
-                    <button
-                      style={buttonStyle}
-                      onClick={() => handleBaixarClick(req.id)}
-                    >
-                      Baixar
-                    </button>
+                    {req.data_programacao_subida
+                      ? new Date(req.data_programacao_subida).toLocaleDateString("pt-BR")
+                      : ""}
+                  </td>
+                  <td style={thtdStyle}>
+                    <div style={actionButtonContainer}>
+                      <button style={baixarButtonStyle} onClick={() => handleBaixarClick(req.id)}>
+                        Baixar Itens
+                      </button>
+                      <button
+                        style={visualizarButtonStyle}
+                        onClick={() => navigate(`/visualizar-requisicao?reqId=${req.id}`)}
+                      >
+                        Visualizar
+                      </button>
+                      <button
+                        style={acessarButtonStyle}
+                        onClick={() => handleAcessarClick(req.id)}
+                      >
+                        Aprovação
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

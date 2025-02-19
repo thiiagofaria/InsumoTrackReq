@@ -604,6 +604,7 @@ const CreateRequisicao = () => {
               onChange={(e) => setDataProgramacaoSubida(e.target.value)}
               style={inputStyle}
               required
+              min={new Date().toISOString().split("T")[0]} // Apenas datas de hoje pra frente
             />
           </div>
           {/* Apenas o botão Confirmar nesta seção */}

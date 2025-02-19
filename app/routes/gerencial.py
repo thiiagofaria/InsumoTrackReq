@@ -7,6 +7,8 @@ from io import BytesIO
 from app.database import get_db
 from app import models, schemas
 from app.models import GerencialObra
+from app.routes.auth import get_current_user
+
 
 router = APIRouter(
     prefix="/gerencial",
@@ -183,17 +185,26 @@ colunas_float = [
 ]
 
 @router.post("/upload-excel/")
-async def upload_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_excel(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: schemas.UsuarioResponse = Depends(get_current_user)
+):
     """
-    Faz upload de um arquivo Excel, renomeia colunas conforme `column_mapping`
-    e insere dados na tabela GerencialObra.
+    Faz upload de um arquivo Excel, realiza o delete dos registros existentes
+    (filtrados pelo codigo_projeto do usuário logado) e insere os novos dados na tabela GerencialObra.
     """
     try:
         contents = await file.read()
         df = pd.read_excel(BytesIO(contents), engine="openpyxl")
 
+        # Renomeia as colunas conforme mapeamento definido
         df.rename(columns=column_mapping, inplace=True)
 
+        # Converte a coluna de data para datetime (formato dd/mm/yyyy)
+        if "data_fechamento" in df.columns:
+            df["data_fechamento"] = pd.to_datetime(df["data_fechamento"], format="%d/%m/%Y", errors="coerce")
+        
         required_columns = set(column_mapping.values())
         missing_columns = required_columns - set(df.columns)
         if missing_columns:
@@ -202,18 +213,23 @@ async def upload_excel(file: UploadFile = File(...), db: Session = Depends(get_d
                 detail=f"Colunas ausentes no arquivo: {missing_columns}"
             )
 
-
         for coluna in colunas_float:
             if coluna in df.columns:
                 df[coluna] = pd.to_numeric(df[coluna], errors="coerce").fillna(0)
-
 
         if "tipo_projecao" in df.columns:
             df["tipo_projecao"] = df["tipo_projecao"].astype(str)
         if "observacao" in df.columns:
             df["observacao"] = df["observacao"].astype(str)
 
+        # Realiza o delete dos registros existentes para o codigo_projeto do usuário logado
+        codigo_projeto = current_user.codigo_projeto
+        db.query(models.GerencialObra).filter(
+            models.GerencialObra.codigo_projeto == codigo_projeto
+        ).delete(synchronize_session=False)
+        db.commit()
 
+        # Insere as novas entradas
         for _, row in df.iterrows():
             nova_entrada = GerencialObra(**row.to_dict())
             db.add(nova_entrada)

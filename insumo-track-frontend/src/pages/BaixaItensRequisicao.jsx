@@ -12,57 +12,75 @@ const BaixaItensRequisicao = () => {
   const [baixasInput, setBaixasInput] = useState({}); // { item_id: novaBaixa }
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  // "resumo" conterá a resposta do endpoint de baixa (lista dos itens baixados)
-  const [resumo, setResumo] = useState(null);
+  const [resumo, setResumo] = useState(null); // exibe resumo da baixa
 
+  // ======================================================
   // Estilos
+  // ======================================================
   const containerStyle = {
-    maxWidth: "900px",
+    maxWidth: "1000px",
     margin: "30px auto",
-    fontFamily: "sans-serif",
+    fontFamily: "Arial, sans-serif",
+    padding: "0 20px"
+  };
+
+  const titleStyle = {
+    textAlign: "center",
+    marginBottom: "1rem",
+    fontSize: "1.8rem",
+    color: "#333"
   };
 
   const cardStyle = {
-    border: "1px solid #ddd",
-    borderRadius: "6px",
-    padding: "16px",
-    marginBottom: "20px",
+    backgroundColor: "#fff",
+    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+    borderRadius: "8px",
+    padding: "20px",
+    marginBottom: "20px"
   };
 
   const buttonStyle = {
-    padding: "8px 16px",
+    padding: "10px 20px",
     backgroundColor: "#007bff",
     color: "#fff",
     border: "none",
     borderRadius: "4px",
     cursor: "pointer",
-    marginRight: "10px",
-  };
-
-  const thtdStyle = {
-    border: "1px solid #ccc",
-    padding: "8px",
-    textAlign: "left",
+    fontSize: "1rem",
+    transition: "background-color 0.2s",
+    marginRight: "10px"
   };
 
   const tableStyle = {
     width: "100%",
     borderCollapse: "collapse",
-    marginTop: "10px",
-    backgroundColor: "#fff",
+    marginTop: "20px",
+    fontSize: "0.95rem"
+  };
+
+  const tableHeaderStyle = {
+    backgroundColor: "#007bff",
+    color: "#fff",
+    textAlign: "left"
+  };
+
+  const thtdStyle = {
+    border: "1px solid #ccc",
+    padding: "8px"
   };
 
   const inputStyle = {
     padding: "6px",
     borderRadius: "4px",
     border: "1px solid #ccc",
-    width: "80px",
+    width: "70px",
     textAlign: "center",
+    fontSize: "0.95rem"
   };
 
-  // --------------------------
-  // useEffect para buscar reqId da query string
-  // --------------------------
+  // ======================================================
+  // useEffect: pegar reqId da query string e buscar a requisição
+  // ======================================================
   useEffect(() => {
     const paramId = searchParams.get("reqId");
     if (paramId) {
@@ -72,9 +90,9 @@ const BaixaItensRequisicao = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  // --------------------------
-  // Função para buscar a requisição
-  // --------------------------
+  // ======================================================
+  // Buscar a requisição
+  // ======================================================
   const handleBuscar = async (forcadoId = null) => {
     const idBusca = forcadoId || reqId;
     if (!idBusca) return;
@@ -113,9 +131,9 @@ const BaixaItensRequisicao = () => {
     }
   };
 
-  // --------------------------
-  // Calcula total baixado e saldo para cada item
-  // --------------------------
+  // ======================================================
+  // Calcula total baixado e saldo
+  // ======================================================
   const calcularBaixasESaldo = (item) => {
     const totalBaixado = item.baixas
       ? item.baixas.reduce((acc, baixa) => acc + baixa.quantidade_baixada, 0)
@@ -124,9 +142,9 @@ const BaixaItensRequisicao = () => {
     return { totalBaixado, saldoAtual };
   };
 
-  // --------------------------
-  // Atualiza entrada de baixa
-  // --------------------------
+  // ======================================================
+  // Atualiza o valor de nova baixa no estado
+  // ======================================================
   const handleInputBaixa = (itemId, value, saldoAtual) => {
     const novaBaixa = parseFloat(value);
     if (isNaN(novaBaixa) || novaBaixa < 0) return;
@@ -137,13 +155,13 @@ const BaixaItensRequisicao = () => {
     setBaixasInput({ ...baixasInput, [itemId]: novaBaixa });
   };
 
-  // --------------------------
-  // Função para realizar a baixa
-  // --------------------------
+  // ======================================================
+  // Realiza a baixa
+  // ======================================================
   const handleRealizarBaixa = async () => {
     if (!requisicao) return;
 
-    // Monta o payload somente com as baixas > 0
+    // Monta o payload com as baixas informadas (> 0)
     const payload = requisicao.itens
       .filter((item) => {
         const novaBaixa = baixasInput[item.id];
@@ -177,11 +195,9 @@ const BaixaItensRequisicao = () => {
         const errData = await res.json();
         throw new Error(errData.detail || "Erro ao realizar a baixa");
       }
-
       // "result" é a lista dos itens baixados, cada um com data_baixa
       const result = await res.json();
-      setResumo(result); // Guarda o resumo para exibição/impressão
-
+      setResumo(result);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -189,20 +205,21 @@ const BaixaItensRequisicao = () => {
     }
   };
 
-  // --------------------------
-  // Função para voltar à tela de filtragem
-  // --------------------------
+  // ======================================================
+  // Voltar para a lista de requisições
+  // ======================================================
   const handleVoltar = () => {
     navigate("/filtrar-requisicoes");
   };
 
-  // --------------------------
-  // Renderização do resumo para impressão
-  // --------------------------
+  // ======================================================
+  // Renderiza o resumo para impressão
+  // ======================================================
   const renderResumoImpressao = () => {
-    // Mapeia cada baixa do "resumo" para exibir descrição, quantidade e data/hora da baixa
     const itensResumo = resumo.map((baixa) => {
-      const itemEncontrado = requisicao.itens.find((it) => it.id === baixa.item_requisicao_id);
+      const itemEncontrado = requisicao.itens.find(
+        (it) => it.id === baixa.item_requisicao_id
+      );
       return {
         descricao: itemEncontrado ? itemEncontrado.descricao : "N/A",
         quantidade_baixada: baixa.quantidade_baixada,
@@ -212,7 +229,7 @@ const BaixaItensRequisicao = () => {
 
     return (
       <div>
-        <h2>Detalhes da Requisição</h2>
+        <h2 style={{ marginTop: 0 }}>Detalhes da Requisição</h2>
         <p><strong>ID:</strong> {requisicao.id}</p>
         <p>
           <strong>Data:</strong>{" "}
@@ -221,19 +238,21 @@ const BaixaItensRequisicao = () => {
           })}
         </p>
         <p>
-          <strong>Usuário Criador:</strong> {requisicao.usuario_criador?.nome || "N/A"}
+          <strong>Usuário Criador:</strong>{" "}
+          {requisicao.usuario_criador?.nome || "N/A"}
         </p>
         <p>
           <strong>Empresa:</strong> {requisicao.empresa?.nome || "N/A"}
         </p>
         <p>
-          <strong>Observação da Requisição:</strong> {requisicao.justificativa || "N/A"}
+          <strong>Observação da Requisição:</strong>{" "}
+          {requisicao.justificativa || "N/A"}
         </p>
 
         <h3>Itens Baixados</h3>
-        <table style={{ ...tableStyle, marginTop: "20px" }}>
+        <table style={tableStyle}>
           <thead>
-            <tr style={{ backgroundColor: "#007bff", color: "#fff", textAlign: "left" }}>
+            <tr style={tableHeaderStyle}>
               <th style={thtdStyle}>Material</th>
               <th style={thtdStyle}>Quantidade Baixada</th>
               <th style={thtdStyle}>Data/Hora da Baixa</th>
@@ -241,7 +260,12 @@ const BaixaItensRequisicao = () => {
           </thead>
           <tbody>
             {itensResumo.map((item, index) => (
-              <tr key={index}>
+              <tr
+                key={index}
+                style={{
+                  backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#ffffff"
+                }}
+              >
                 <td style={thtdStyle}>{item.descricao}</td>
                 <td style={thtdStyle}>{item.quantidade_baixada}</td>
                 <td style={thtdStyle}>
@@ -257,32 +281,28 @@ const BaixaItensRequisicao = () => {
     );
   };
 
-  // --------------------------
-  // Renderização principal
-  // --------------------------
+  // ======================================================
+  // Render principal
+  // ======================================================
   return (
     <div style={containerStyle}>
-      <h1 style={{ textAlign: "center", marginBottom: "1rem" }}>
-        Baixa de Itens da Requisição
-      </h1>
+      <h1 style={titleStyle}>Baixa de Itens da Requisição</h1>
 
-      {loading && <p>Carregando...</p>}
+      {loading && <p style={{ fontStyle: "italic" }}>Carregando...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
+      {/* Se a requisição não está carregada e não há erro, exibimos um aviso */}
       {!requisicao && !loading && !error && (
-        <p>Nenhuma requisição carregada. Por favor, volte e selecione uma requisição.</p>
+        <p>Nenhuma requisição carregada. Volte e selecione uma requisição.</p>
       )}
 
-      {/* Se já houver resumo (itens baixados), mostra a tela de resumo para impressão */}
+      {/* Se houver resumo, mostra a tela de impressão */}
       {resumo ? (
         <div style={cardStyle}>
           {renderResumoImpressao()}
-
           <div style={{ marginTop: "20px" }}>
             <button
-              onClick={() => {
-                window.print();
-              }}
+              onClick={() => window.print()}
               style={buttonStyle}
             >
               Imprimir Resumo
@@ -293,14 +313,14 @@ const BaixaItensRequisicao = () => {
           </div>
         </div>
       ) : (
-        // Senão, exibe a tela normal para dar baixa
+        // Senão, exibe a tela normal de baixa
         requisicao && (
           <div style={cardStyle}>
-            <button onClick={handleVoltar} style={{ ...buttonStyle, marginBottom: "10px" }}>
+            <button onClick={handleVoltar} style={buttonStyle}>
               Voltar
             </button>
 
-            <h2>Detalhes da Requisição</h2>
+            <h2 style={{ marginTop: "16px" }}>Detalhes da Requisição</h2>
             <p><strong>ID:</strong> {requisicao.id}</p>
             <p>
               <strong>Data:</strong>{" "}
@@ -318,11 +338,11 @@ const BaixaItensRequisicao = () => {
               <strong>Observação da Requisição:</strong> {requisicao.justificativa || "N/A"}
             </p>
 
-            <h3>Itens da Requisição</h3>
+            <h3 style={{ marginTop: "20px" }}>Itens da Requisição</h3>
             {requisicao.itens && requisicao.itens.length > 0 ? (
               <table style={tableStyle}>
                 <thead>
-                  <tr style={{ backgroundColor: "#007bff", color: "#fff", textAlign: "left" }}>
+                  <tr style={tableHeaderStyle}>
                     <th style={thtdStyle}>Grupo de Serviço</th>
                     <th style={thtdStyle}>Material</th>
                     <th style={thtdStyle}>Unidade</th>
@@ -339,12 +359,12 @@ const BaixaItensRequisicao = () => {
                     const { totalBaixado, saldoAtual } = calcularBaixasESaldo(item);
                     const novaBaixa = baixasInput[item.id] || 0;
                     const novoSaldo = saldoAtual - novaBaixa;
+
                     return (
                       <tr
                         key={index}
                         style={{
-                          borderBottom: "1px solid #ddd",
-                          backgroundColor: index % 2 === 0 ? "#f2f2f2" : "white",
+                          backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#ffffff"
                         }}
                       >
                         <td style={thtdStyle}>{item.subgrupo_2}</td>
@@ -366,11 +386,15 @@ const BaixaItensRequisicao = () => {
                             min="0"
                             max={saldoAtual}
                             value={novaBaixa}
-                            onChange={(e) => handleInputBaixa(item.id, e.target.value, saldoAtual)}
+                            onChange={(e) =>
+                              handleInputBaixa(item.id, e.target.value, saldoAtual)
+                            }
                             style={inputStyle}
                           />
                         </td>
-                        <td style={{ ...thtdStyle, textAlign: "center" }}>{novoSaldo}</td>
+                        <td style={{ ...thtdStyle, textAlign: "center" }}>
+                          {novoSaldo}
+                        </td>
                       </tr>
                     );
                   })}
@@ -381,14 +405,8 @@ const BaixaItensRequisicao = () => {
             )}
 
             <div style={{ marginTop: "20px" }}>
-              <button
-                onClick={handleRealizarBaixa}
-                style={{ ...buttonStyle, marginRight: "10px" }}
-              >
+              <button onClick={handleRealizarBaixa} style={buttonStyle}>
                 Realizar Baixa
-              </button>
-              <button onClick={handleVoltar} style={buttonStyle}>
-                Voltar
               </button>
             </div>
           </div>

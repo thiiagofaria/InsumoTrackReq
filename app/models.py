@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Date, Float, Text, Boolean
 from sqlalchemy.orm import relationship
 from app.database import Base
-import datetime
+from datetime import date, datetime, time
 from pytz import timezone
 
 local_tz = timezone("America/Sao_Paulo")
@@ -13,7 +13,7 @@ class HistoricoStatusRequisicao(Base):
     id = Column(Integer, primary_key=True, index=True)
     requisicao_id = Column(Integer, ForeignKey("requisicoes.id", ondelete="CASCADE"))
     status_id = Column(Integer, ForeignKey("status_requisicao.id", ondelete="CASCADE"))
-    data_alteracao = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(local_tz), nullable=False)
+    data_alteracao = Column(DateTime(timezone=True), default=lambda: datetime.now(local_tz), nullable=False)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"))
     observacao_aprovacao = Column(String(500), nullable=True)
 
@@ -77,7 +77,7 @@ class Requisicao(Base):
     __tablename__ = "requisicoes"
 
     id = Column(Integer, primary_key=True, index=True)
-    data_criacao = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(local_tz), nullable=False)
+    data_criacao = Column(DateTime(timezone=True), default=lambda: datetime.now(local_tz), nullable=False)
     usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"))
     usuario_aprovador_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
     codigo_projeto = Column(String(50), ForeignKey("obras.codigo_projeto", ondelete="CASCADE"), nullable=False)
@@ -122,7 +122,7 @@ class BaixaItemRequisicao(Base):
     quantidade_baixada = Column(Float, nullable=False)
     data_baixa = Column(
         DateTime(timezone=True), 
-        default=lambda: datetime.datetime.now(local_tz), 
+        default=lambda: datetime.now(local_tz), 
         nullable=False
     )
 

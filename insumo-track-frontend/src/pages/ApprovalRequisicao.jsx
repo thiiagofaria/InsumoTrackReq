@@ -1,80 +1,106 @@
 // pages/ApprovalRequisicao.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const ApprovalRequisicao = () => {
   const { user } = useAuth();
-  const [reqId, setReqId] = useState("");
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
   const [requisicao, setRequisicao] = useState(null);
   const [observacao, setObservacao] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // ================================
   // Estilos
+  // ================================
   const containerStyle = {
-    maxWidth: "900px",
+    maxWidth: "1000px",
     margin: "30px auto",
-    fontFamily: "sans-serif",
+    fontFamily: "Arial, sans-serif",
+    padding: "0 20px"
+  };
+
+  const titleStyle = {
+    textAlign: "center",
+    marginBottom: "1rem",
+    fontSize: "1.8rem",
+    color: "#333"
   };
 
   const cardStyle = {
-    border: "1px solid #ddd",
-    borderRadius: "6px",
-    padding: "16px",
-    marginBottom: "20px",
+    backgroundColor: "#fff",
+    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+    borderRadius: "8px",
+    padding: "20px",
+    marginBottom: "20px"
   };
 
-  const formRowStyle = {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "12px",
-    marginBottom: "12px",
-  };
-
-  const labelContainerStyle = {
-    display: "flex",
-    flexDirection: "column",
-    flex: "1 1 200px",
-  };
-
-  const inputStyle = {
-    padding: "6px",
-    borderRadius: "4px",
-    border: "1px solid #ccc",
+  const sectionTitleStyle = {
+    marginTop: 0,
+    borderBottom: "1px solid #ddd",
+    paddingBottom: "8px",
+    marginBottom: "16px",
+    fontSize: "1.2rem",
+    color: "#333"
   };
 
   const buttonStyle = {
-    padding: "8px 16px",
+    padding: "10px 20px",
     backgroundColor: "#007bff",
     color: "#fff",
     border: "none",
     borderRadius: "4px",
     cursor: "pointer",
-  };
-
-  const thtdStyle = {
-    border: "1px solid #ccc",
-    padding: "8px",
-    textAlign: "left",
+    fontSize: "1rem",
+    transition: "background-color 0.2s",
+    marginRight: "10px"
   };
 
   const tableStyle = {
     width: "100%",
     borderCollapse: "collapse",
     marginTop: "10px",
-    backgroundColor: "#fff",
+    fontSize: "0.95rem"
   };
 
-  // Função para resetar o estado da tela
-  const resetTela = () => {
-    setReqId("");
-    setRequisicao(null);
-    setObservacao("");
-    setError("");
+  const tableHeaderStyle = {
+    backgroundColor: "#007bff",
+    color: "#fff",
+    textAlign: "left"
   };
 
-  // Função para buscar a requisição pelo ID
-  const handleBuscar = async () => {
+  const thtdStyle = {
+    border: "1px solid #ccc",
+    padding: "8px",
+    textAlign: "left"
+  };
+
+  const textAreaStyle = {
+    width: "100%",
+    padding: "8px",
+    fontSize: "0.95rem",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    marginTop: "6px"
+  };
+
+  // ================================
+  // useEffect: busca a requisição
+  // ================================
+  useEffect(() => {
+    const reqId = searchParams.get("reqId");
+    if (reqId) {
+      handleBuscar(reqId);
+    }
+  }, [searchParams]);
+
+  // ================================
+  // Função para buscar requisição
+  // ================================
+  const handleBuscar = async (reqId) => {
     setLoading(true);
     setError("");
     setRequisicao(null);
@@ -82,7 +108,7 @@ const ApprovalRequisicao = () => {
       const res = await fetch(`http://127.0.0.1:8000/requisicoes/${reqId}`, {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${user.token}`,
+          Authorization: `Bearer ${user.token}`,
         },
       });
       if (!res.ok) {
@@ -90,7 +116,6 @@ const ApprovalRequisicao = () => {
         throw new Error(err.detail || "Requisição não encontrada");
       }
       const data = await res.json();
-      // Verifica se a requisição pertence à obra do usuário logado
       if (data.codigo_projeto !== user.codigo_projeto) {
         throw new Error("Você não tem permissão para ver essa requisição.");
       }
@@ -102,24 +127,21 @@ const ApprovalRequisicao = () => {
     }
   };
 
-  // Função para aprovar ou reprovar a requisição
+  // ================================
+  // Aprovar / Reprovar
+  // ================================
   const handleAprovacao = async (aprovado) => {
-    // Se a requisição não estiver pendente, não permite a intervenção.
-    if (requisicao.status_id !== 1) {
-      return;
-    }
+    if (requisicao.status_id !== 1) return;
     setLoading(true);
     setError("");
+
     try {
-      const payload = {
-        aprovado,
-        observacao,
-      };
+      const payload = { aprovado, observacao };
       const res = await fetch(`http://127.0.0.1:8000/requisicoes/${requisicao.id}/aprovar`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${user.token}`,
+          Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify(payload),
       });
@@ -127,10 +149,9 @@ const ApprovalRequisicao = () => {
         const errData = await res.json();
         throw new Error(errData.detail || "Erro ao atualizar requisição");
       }
-      const updatedReq = await res.json();
+      await res.json();
       alert(`Requisição ${aprovado ? "APROVADA" : "REPROVADA"} com sucesso!`);
-      // Após a ação, resetar a tela
-      resetTela();
+      navigate("/filtrar-requisicoes");
     } catch (e) {
       setError(e.message);
     } finally {
@@ -138,37 +159,19 @@ const ApprovalRequisicao = () => {
     }
   };
 
+  // ================================
+  // Render
+  // ================================
   return (
     <div style={containerStyle}>
-      <h1>Aprovação de Requisições</h1>
+      <h1 style={titleStyle}>Aprovação de Requisições</h1>
 
-      {/* Campo para inserir o número da requisição e buscar */}
-      <div style={cardStyle}>
-        <div style={formRowStyle}>
-          <div style={labelContainerStyle}>
-            <label>Número da Requisição:</label>
-            <input
-              type="text"
-              value={reqId}
-              onChange={(e) => setReqId(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-          <div style={labelContainerStyle}>
-            <label>&nbsp;</label>
-            <button onClick={handleBuscar} style={buttonStyle}>
-              Buscar
-            </button>
-          </div>
-        </div>
-        {loading && <p>Carregando...</p>}
-        {error && <p style={{ color: "red" }}>{error}</p>}
-      </div>
+      {loading && <p style={{ fontStyle: "italic" }}>Carregando...</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {/* Exibição dos detalhes da requisição, se encontrada */}
-      {requisicao && (
+      {requisicao ? (
         <div style={cardStyle}>
-          <h2>Detalhes da Requisição</h2>
+          <h2 style={sectionTitleStyle}>Detalhes da Requisição</h2>
           <p><strong>ID:</strong> {requisicao.id}</p>
           <p>
             <strong>Data:</strong>{" "}
@@ -176,20 +179,10 @@ const ApprovalRequisicao = () => {
               timeZone: "America/Sao_Paulo",
             })}
           </p>
-          <p>
-            <strong>Usuário Criador:</strong>{" "}
-            {requisicao.usuario_criador?.nome || "N/A"}
-          </p>
-          <p>
-            <strong>Empresa:</strong>{" "}
-            {requisicao.empresa?.nome || "N/A"}
-          </p>
-          <p>
-            <strong>Observação da Requisição:</strong>{" "}
-            {requisicao.justificativa}
-          </p>
+          <p><strong>Usuário Criador:</strong> {requisicao.usuario_criador?.nome || "N/A"}</p>
+          <p><strong>Empresa:</strong> {requisicao.empresa?.nome || "N/A"}</p>
+          <p><strong>Observação da Requisição:</strong> {requisicao.justificativa || "N/A"}</p>
 
-          {/* Verifica o status da requisição */}
           {requisicao.status_id !== 1 ? (
             <p style={{ color: "blue", fontWeight: "bold" }}>
               {requisicao.status_id === 2
@@ -198,12 +191,11 @@ const ApprovalRequisicao = () => {
             </p>
           ) : (
             <>
-              {/* Tabela de Itens Requisitados */}
-              <h3>Itens Requisitados</h3>
+              <h3 style={{ marginBottom: "10px" }}>Itens Requisitados</h3>
               {requisicao.itens && requisicao.itens.length > 0 ? (
                 <table style={tableStyle}>
                   <thead>
-                    <tr style={{ backgroundColor: "#007bff", color: "#fff", textAlign: "left" }}>
+                    <tr style={tableHeaderStyle}>
                       <th style={thtdStyle}>Grupo de Serviço</th>
                       <th style={thtdStyle}>Material</th>
                       <th style={thtdStyle}>Unidade</th>
@@ -217,7 +209,7 @@ const ApprovalRequisicao = () => {
                         key={index}
                         style={{
                           borderBottom: "1px solid #ddd",
-                          backgroundColor: index % 2 === 0 ? "#f2f2f2" : "white",
+                          backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#ffffff"
                         }}
                       >
                         <td style={thtdStyle}>{item.subgrupo_2}</td>
@@ -236,28 +228,31 @@ const ApprovalRequisicao = () => {
               )}
 
               <div style={{ marginTop: "20px" }}>
-                <label>Observação (opcional):</label>
+                <label style={{ fontWeight: "bold" }}>Observação (opcional):</label>
                 <textarea
                   value={observacao}
                   onChange={(e) => setObservacao(e.target.value)}
-                  style={{ width: "100%", padding: "6px" }}
+                  style={textAreaStyle}
                   rows={3}
                 />
               </div>
+
               <div style={{ marginTop: "20px" }}>
-                <button
-                  onClick={() => handleAprovacao(true)}
-                  style={{ ...buttonStyle, marginRight: "10px" }}
-                >
+                <button onClick={() => handleAprovacao(true)} style={buttonStyle}>
                   Aprovar
                 </button>
-                <button onClick={() => handleAprovacao(false)} style={buttonStyle}>
+                <button
+                  onClick={() => handleAprovacao(false)}
+                  style={{ ...buttonStyle, marginRight: 0 }}
+                >
                   Reprovar
                 </button>
               </div>
             </>
           )}
         </div>
+      ) : (
+        !loading && <p>Nenhuma requisição encontrada.</p>
       )}
     </div>
   );

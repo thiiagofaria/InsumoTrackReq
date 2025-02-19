@@ -32,7 +32,7 @@ def criar_requisicao(requisicao: schemas.RequisicaoCreate, db: Session = Depends
             empresa_id=requisicao.empresa_id,
             status_id=requisicao.status_id,
             justificativa=requisicao.justificativa,
-            data_criacao=datetime.datetime.now(local_tz),
+            data_criacao=datetime.now(local_tz),
             data_programacao_subida=requisicao.data_programacao_subida,
         )
 
@@ -44,7 +44,7 @@ def criar_requisicao(requisicao: schemas.RequisicaoCreate, db: Session = Depends
             requisicao_id=nova_requisicao.id,
             status_id=nova_requisicao.status_id,
             usuario_id=nova_requisicao.usuario_id,
-            data_alteracao=datetime.datetime.now(local_tz),
+            data_alteracao=datetime.now(local_tz),
         )
         db.add(historico)
         db.commit()
@@ -170,7 +170,7 @@ def atualizar_requisicao(requisicao_id: int, requisicao_update: schemas.Requisic
             requisicao_id=requisicao.id,
             status_id=requisicao.status_id,
             usuario_id=requisicao_update.usuario_id,
-            data_alteracao=datetime.datetime.now(local_tz)
+            data_alteracao=datetime.now(local_tz)
         )
         db.add(historico)
         db.commit()
