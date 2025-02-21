@@ -65,6 +65,9 @@ const Menu = () => {
           <Link to="/filtrar-requisicoes">
             <button style={buttonStyle}>Buscar Requisições</button>
           </Link>
+          <Link to="/filtrar-baixas">
+            <button style={buttonStyle}>Buscar Baixas</button>
+          </Link>
         </nav>
       </div>
     </div>

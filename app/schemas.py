@@ -236,3 +236,30 @@ class RequisicaoResponse(RequisicaoBase):
 
     class Config:
         from_attributes = True
+
+    
+class UnidadeMedidaBase(BaseModel):
+    nome: str
+    sigla: str
+
+class UnidadeMedidaResponse(UnidadeMedidaBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class BaixaItemDetalhadaResponse(BaseModel):
+    id: int
+    requisicao_id: int
+    item_requisicao_id: int
+    item_descricao: str
+    local_aplicacao: str
+    unidade_medida: str
+    quantidade_baixada: float
+    data_baixa: datetime
+    usuario_baixa_id: int
+    usuario_baixa_nome: str
+    empresa: str
+
+    class Config:
+        orm_mode = True

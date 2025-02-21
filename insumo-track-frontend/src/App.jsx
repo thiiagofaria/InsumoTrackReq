@@ -10,6 +10,7 @@ import BaixaItensRequisicao from "./pages/BaixaItensRequisicao";
 import FilterRequisicoes from "./pages/FilterRequisicoes";
 import UploadGerencial from "./pages/UploadGerencial";
 import VisualizarRequisicao from "./pages/VisualizarRequisicao";
+import FiltrarBaixas from "./pages/FiltrarBaixas";
 import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
@@ -62,6 +63,14 @@ function App() {
           element={
             <PrivateRoute>
               <UploadGerencial />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/filtrar-baixas"
+          element={
+            <PrivateRoute>
+              <FiltrarBaixas />
             </PrivateRoute>
           }
         />

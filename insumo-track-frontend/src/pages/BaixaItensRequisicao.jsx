@@ -224,8 +224,10 @@ const BaixaItensRequisicao = () => {
         descricao: itemEncontrado ? itemEncontrado.descricao : "N/A",
         quantidade_baixada: baixa.quantidade_baixada,
         data_baixa: baixa.data_baixa,
+        local_aplicacao: itemEncontrado ? itemEncontrado.local_aplicacao : "N/A",
       };
     });
+  
 
     return (
       <div>
@@ -238,15 +240,13 @@ const BaixaItensRequisicao = () => {
           })}
         </p>
         <p>
-          <strong>Usuário Criador:</strong>{" "}
-          {requisicao.usuario_criador?.nome || "N/A"}
+          <strong>Usuário Criador:</strong> {requisicao.usuario_criador?.nome || "N/A"}
         </p>
         <p>
           <strong>Empresa:</strong> {requisicao.empresa?.nome || "N/A"}
         </p>
         <p>
-          <strong>Observação da Requisição:</strong>{" "}
-          {requisicao.justificativa || "N/A"}
+          <strong>Observação da Requisição:</strong> {requisicao.justificativa || "N/A"}
         </p>
 
         <h3>Itens Baixados</h3>
@@ -255,6 +255,7 @@ const BaixaItensRequisicao = () => {
             <tr style={tableHeaderStyle}>
               <th style={thtdStyle}>Material</th>
               <th style={thtdStyle}>Quantidade Baixada</th>
+              <th style={thtdStyle}>Local de Aplicação</th>
               <th style={thtdStyle}>Data/Hora da Baixa</th>
             </tr>
           </thead>
@@ -268,6 +269,7 @@ const BaixaItensRequisicao = () => {
               >
                 <td style={thtdStyle}>{item.descricao}</td>
                 <td style={thtdStyle}>{item.quantidade_baixada}</td>
+                <td style={thtdStyle}>{item.local_aplicacao}</td>
                 <td style={thtdStyle}>
                   {new Date(item.data_baixa).toLocaleString("pt-BR", {
                     timeZone: "America/Sao_Paulo",

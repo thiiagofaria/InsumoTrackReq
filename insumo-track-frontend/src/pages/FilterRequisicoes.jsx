@@ -353,7 +353,6 @@ function FilterRequisicoes() {
                 <th style={thtdStyle}>Empresa</th>
                 <th style={thtdStyle}>Usuário Criado</th>
                 <th style={thtdStyle}>Status</th>
-                <th style={thtdStyle}>Local de aplicação</th>
                 <th style={thtdStyle}>Data Prog. Subida</th>
                 <th style={thtdStyle}>Ações</th>
               </tr>
@@ -374,7 +373,6 @@ function FilterRequisicoes() {
                   <td style={thtdStyle}>{req.empresa?.nome || "N/A"}</td>
                   <td style={thtdStyle}>{req.usuario_criador?.nome || "N/A"}</td>
                   <td style={thtdStyle}>{req.status?.descricao || "N/A"}</td>
-                  <td style={thtdStyle}>{req.local_aplicacao || "N/A"}</td>
                   <td style={thtdStyle}>
                     {req.data_programacao_subida
                       ? new Date(req.data_programacao_subida).toLocaleDateString("pt-BR")

@@ -34,6 +34,8 @@ const CreateRequisicao = () => {
   // Campo Observação (antigo Justificativa)
   const [justificativa, setJustificativa] = useState("");
 
+  const [unidades, setUnidades] = useState([]);
+
   // Flag para confirmar (travar) a seção de Classificação
   const [classificacaoConfirmada, setClassificacaoConfirmada] = useState(false);
 
@@ -43,7 +45,7 @@ const CreateRequisicao = () => {
   const [materiais, setMateriais] = useState([]);
   // O valor selecionado será armazenado como string JSON (para transportar o objeto)
   const [materialSelecionado, setMaterialSelecionado] = useState("");
-  const [unidadeSelecionada, setUnidadeSelecionada] = useState(null);
+  const [unidadeSelecionada, setUnidadeSelecionada] = useState("");
   const [quantidade, setQuantidade] = useState("");
   
   // Lista de itens adicionados
@@ -251,33 +253,22 @@ const CreateRequisicao = () => {
     }
   }, [classificacaoConfirmada, classificacao2Selecionada, obraSelecionada, classificacaoFixa]);
 
-  // Ao selecionar um material, buscar a unidade correspondente
+
   useEffect(() => {
-    if (!materialSelecionado) {
-      setUnidadeSelecionada(null);
-      return;
-    }
-    try {
-      const materialObj = JSON.parse(materialSelecionado);
-      fetch(
-        `http://127.0.0.1:8000/gerencial/unidades/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}/${materialObj.subgrupo3}/${materialObj.servico}/${materialObj.descricao}`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          if (data && data.length > 0) {
-            setUnidadeSelecionada(data[0]);
-          } else {
-            setUnidadeSelecionada("Não disponível");
-          }
-        })
-        .catch((err) => {
-          console.error("Erro ao buscar unidade:", err);
-          setUnidadeSelecionada("Erro ao carregar");
-        });
-    } catch (e) {
-      console.error("Erro ao parsear materialSelecionado", e);
-    }
-  }, [materialSelecionado, obraSelecionada, classificacao2Selecionada, classificacaoFixa]);
+    fetch("http://127.0.0.1:8000/unidades/")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Dados recebidos:", data);
+        if (Array.isArray(data)) {
+          setUnidades(data);
+        } else {
+          console.warn("Dados não são um array:", data);
+          setUnidades([]);
+        }
+      })
+      .catch((err) => console.error("Erro ao buscar unidades:", err));
+  }, []);
+  
 
   // ========================================================
   // Funções de Manipulação
@@ -308,7 +299,7 @@ const CreateRequisicao = () => {
       setJustificativa("");
       setItens([]);
       setMaterialSelecionado("");
-      setUnidadeSelecionada(null);
+      setUnidadeSelecionada("");
       setQuantidade("");
     }
   };
@@ -349,7 +340,7 @@ const CreateRequisicao = () => {
     setItens([...itens, novoItem]);
     // Limpa os campos da seção Itens para nova adição
     setMaterialSelecionado("");
-    setUnidadeSelecionada(null);
+    setUnidadeSelecionada("");
     setQuantidade("");
   };
 
@@ -426,7 +417,7 @@ const CreateRequisicao = () => {
         setJustificativa("");
         setMateriais([]);
         setMaterialSelecionado("");
-        setUnidadeSelecionada(null);
+        setUnidadeSelecionada("");
         setQuantidade("");
         setItens([]);
       }
@@ -449,7 +440,7 @@ const CreateRequisicao = () => {
     setJustificativa("");
     setMateriais([]);
     setMaterialSelecionado("");
-    setUnidadeSelecionada(null);
+    setUnidadeSelecionada("");
     setQuantidade("");
     setItens([]);
     setNovaRequisicaoCriada(null);
@@ -605,6 +596,7 @@ const CreateRequisicao = () => {
               style={inputStyle}
               required
               min={new Date().toISOString().split("T")[0]} // Apenas datas de hoje pra frente
+              disabled={classificacaoConfirmada} // <-- Adicionado para travar o campo
             />
           </div>
           {/* Apenas o botão Confirmar nesta seção */}
@@ -647,20 +639,18 @@ const CreateRequisicao = () => {
               </div>
               <div style={labelContainerStyle}>
                 <label>Unidade:</label>
-                <div
-                  style={{
-                    padding: "4px",
-                    borderRadius: "4px",
-                    border: "1px solid #ccc",
-                    backgroundColor: "#f8f8f8",
-                    minHeight: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                    paddingLeft: "5px"
-                  }}
+                <select
+                  value={unidadeSelecionada}
+                  onChange={(e) => setUnidadeSelecionada(e.target.value)}
+                  style={inputStyle}
                 >
-                  {unidadeSelecionada || " "}
-                </div>
+                  <option value="">Selecione...</option>
+                  {unidades.map((uni) => (
+                    <option key={uni.id} value={uni.sigla}>
+                      {uni.nome} ({uni.sigla})
+                    </option>
+                  ))}
+                </select>
               </div>
               <div style={labelContainerStyle}>
                 <label>Quantidade:</label>

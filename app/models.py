@@ -114,9 +114,8 @@ class ItensRequisicao(Base):
 
 class BaixaItemRequisicao(Base):
     __tablename__ = "baixas_itens_requisicao"
-
     id = Column(Integer, primary_key=True, index=True)
-    requisicao_id = Column(Integer, ForeignKey("requisicoes.id", ondelete="CASCADE"), nullable=False)  # Novo campo
+    requisicao_id = Column(Integer, ForeignKey("requisicoes.id", ondelete="CASCADE"), nullable=False)
     item_requisicao_id = Column(Integer, ForeignKey("itens_requisicao.id", ondelete="CASCADE"), nullable=False)
     usuario_baixa_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     quantidade_baixada = Column(Float, nullable=False)
@@ -128,6 +127,7 @@ class BaixaItemRequisicao(Base):
 
     item_requisicao = relationship("ItensRequisicao", back_populates="baixas")
     usuario_baixa = relationship("Usuario")
+    requisicao = relationship("Requisicao", backref="baixas")  # Adicionado para permitir acesso à empresa
 
 class Usuario(Base):
     __tablename__ = "usuarios"
@@ -175,3 +175,11 @@ class Empresa(Base):
 
     # Relacionamento com requisições
     requisicoes = relationship("Requisicao", back_populates="empresa")
+
+
+class UnidadeMedida(Base):
+    __tablename__ = "unidades_medida"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String(50), nullable=False)
+    sigla = Column(String(10), nullable=False, unique=True)

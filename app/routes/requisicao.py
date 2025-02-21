@@ -135,6 +135,52 @@ def filtrar_requisicoes(
 
     return requisicoes
 
+@router.get("/baixas", response_model=List[schemas.BaixaItemDetalhadaResponse])
+def filtrar_baixas(
+    requisicao_id: Optional[int] = Query(None, description="ID da requisição"),
+    data_baixa_inicio: Optional[date] = Query(None, description="Data de início para baixa"),
+    data_baixa_fim: Optional[date] = Query(None, description="Data final para baixa"),
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.BaixaItemRequisicao).options(
+        joinedload(models.BaixaItemRequisicao.item_requisicao),
+        joinedload(models.BaixaItemRequisicao.usuario_baixa),
+        joinedload(models.BaixaItemRequisicao.requisicao).joinedload(models.Requisicao.empresa)
+    )
+    
+    if requisicao_id is not None:
+        query = query.filter(models.BaixaItemRequisicao.requisicao_id == requisicao_id)
+    if data_baixa_inicio:
+        dt_inicio = datetime.combine(data_baixa_inicio, time.min)
+        query = query.filter(models.BaixaItemRequisicao.data_baixa >= dt_inicio)
+    if data_baixa_fim:
+        dt_fim = datetime.combine(data_baixa_fim, time.max)
+        query = query.filter(models.BaixaItemRequisicao.data_baixa <= dt_fim)
+    
+    baixas = query.all()
+    if not baixas:
+        raise HTTPException(status_code=404, detail="Nenhuma baixa encontrada com os filtros informados")
+    
+    # Mapeamento manual para incluir os campos extras:
+    baixas_detalhadas = []
+    for baixa in baixas:
+        baixa_detalhada = {
+            "id": baixa.id,
+            "requisicao_id": baixa.requisicao_id,
+            "item_requisicao_id": baixa.item_requisicao_id,
+            "item_descricao": baixa.item_requisicao.descricao if baixa.item_requisicao else "N/A",
+            "local_aplicacao": baixa.item_requisicao.local_aplicacao if baixa.item_requisicao else "N/A",
+            "unidade_medida": baixa.item_requisicao.unidade_medida if baixa.item_requisicao else "N/A",
+            "quantidade_baixada": baixa.quantidade_baixada,
+            "data_baixa": baixa.data_baixa,
+            "usuario_baixa_id": baixa.usuario_baixa_id,
+            "usuario_baixa_nome": baixa.usuario_baixa.nome if baixa.usuario_baixa else "N/A",
+            "empresa": baixa.requisicao.empresa.nome if baixa.requisicao and baixa.requisicao.empresa else "N/A"
+        }
+        baixas_detalhadas.append(baixa_detalhada)
+    
+    return baixas_detalhadas
+
 # ✅ Buscar uma requisição por ID (READ)
 @router.get("/{requisicao_id}", response_model=schemas.RequisicaoResponse)
 def buscar_requisicao(requisicao_id: int, db: Session = Depends(get_db)):
