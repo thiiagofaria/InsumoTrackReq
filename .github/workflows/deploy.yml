@@ -19,8 +19,9 @@ jobs:
 
       - name: Configurar SSH
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
+          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > private_key.pem
           chmod 600 private_key.pem
+
 
       - name: Criar backup da versão atual
         run: |
