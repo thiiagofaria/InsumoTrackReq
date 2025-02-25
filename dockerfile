@@ -12,5 +12,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .  
 
 # Comando para subir a API
-CMD ["sh", "-c", "alembic -c /app/alembic.ini upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
+CMD ["sh", "-c", "cd /app/app && alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"]
+
+
+
 
