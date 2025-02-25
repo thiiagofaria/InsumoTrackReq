@@ -1,14 +1,15 @@
-# Usa a imagem oficial do Python
+# Usa a imagem oficial do Python como base
 FROM python:3.11
 
-# Define o diretório de trabalho dentro do container
+# Define o diretório de trabalho
 WORKDIR /app
 
-# Copia apenas os arquivos do backend para dentro do container
-COPY . /app
+# Copia apenas as dependências primeiro para otimizar cache
+COPY app/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Instala as dependências
-RUN pip install --no-cache-dir -r app/requirements.txt
+# Agora copia o restante do código
+COPY app /app
 
-# Comando padrão para rodar a aplicação
-CMD ["python", "main.py"]
+# Define o comando de inicialização
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

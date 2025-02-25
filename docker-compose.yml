@@ -8,22 +8,30 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - ./app:/app
     env_file:
       - .env
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+      timeout: 5s
 
   frontend:
     build:
       context: ./insumo-track-frontend
       args:
-        - VITE_API_URL=http://localhost:8000
+        - VITE_API_URL=http://backend:8000
     container_name: frontend
     ports:
       - "5173:80"
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=http://backend:8000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: always
+

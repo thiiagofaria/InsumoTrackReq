@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copia os arquivos do frontend
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm install --production && npm cache clean --force
 
 # Copia todo o código do frontend para o container
 COPY . .
