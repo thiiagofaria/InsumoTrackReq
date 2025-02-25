@@ -1,0 +1,22 @@
+# Ignora diretórios desnecessários
+.git
+.gitignore
+.vscode/
+.idea/
+__pycache__/
+node_modules/
+venv/
+dist/
+
+# Ignora arquivos sensíveis
+.env
+*.pem
+*.key
+*.crt
+config.json
+
+# Ignora logs e arquivos temporários
+*.log
+*.pid
+*.sock
+*.swp

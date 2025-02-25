@@ -2,6 +2,9 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from alembic import context
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from app.database import Base  # Importa os modelos para Alembic
 from app import models  # Certifique-se de que todos os modelos são carregados
 import urllib.parse

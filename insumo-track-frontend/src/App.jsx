@@ -13,6 +13,9 @@ import VisualizarRequisicao from "./pages/VisualizarRequisicao";
 import FiltrarBaixas from "./pages/FiltrarBaixas";
 import PrivateRoute from "./components/PrivateRoute";
 
+const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+
+
 function App() {
   return (
     <AuthProvider>

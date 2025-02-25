@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+
+
 const BaixaItensRequisicao = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
@@ -103,7 +106,7 @@ const BaixaItensRequisicao = () => {
     setResumo(null);
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/requisicoes/${idBusca}`, {
+      const res = await fetch(`${API_URL}/requisicoes/${idBusca}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user.token}`,
@@ -183,7 +186,7 @@ const BaixaItensRequisicao = () => {
     setError("");
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/requisicoes/${requisicao.id}/baixa`, {
+      const res = await fetch(`${API_URL}/requisicoes/${requisicao.id}/baixa`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

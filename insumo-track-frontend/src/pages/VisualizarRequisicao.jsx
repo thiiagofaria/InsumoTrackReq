@@ -3,6 +3,9 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+
+
 const VisualizarRequisicao = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
@@ -91,7 +94,7 @@ const VisualizarRequisicao = () => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/requisicoes/${reqId}`, {
+      const res = await fetch(`${API_URL}/requisicoes/${reqId}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user.token}`,

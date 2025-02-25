@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+
 const ApprovalRequisicao = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
@@ -105,7 +107,7 @@ const ApprovalRequisicao = () => {
     setError("");
     setRequisicao(null);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/requisicoes/${reqId}`, {
+      const res = await fetch(`${API_URL}/requisicoes/${reqId}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user.token}`,
@@ -137,7 +139,7 @@ const ApprovalRequisicao = () => {
 
     try {
       const payload = { aprovado, observacao };
-      const res = await fetch(`http://127.0.0.1:8000/requisicoes/${requisicao.id}/aprovar`, {
+      const res = await fetch(`${API_URL}/requisicoes/${requisicao.id}/aprovar`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

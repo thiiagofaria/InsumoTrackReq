@@ -3,6 +3,9 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+
+
 function FilterRequisicoes() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -140,7 +143,7 @@ function FilterRequisicoes() {
     if (!user?.token) return;
 
     // Buscar empresas
-    fetch("http://127.0.0.1:8000/empresas", {
+    fetch(`${API_URL}/empresas`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${user.token}`
@@ -154,7 +157,7 @@ function FilterRequisicoes() {
       .catch((err) => console.error("Erro ao buscar empresas:", err));
 
     // Buscar lista de status
-    fetch("http://127.0.0.1:8000/status-requisicao", {
+    fetch(`${API_URL}/status-requisicao`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${user.token}`
@@ -204,7 +207,7 @@ function FilterRequisicoes() {
     }
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/requisicoes/filter?${params.toString()}`, {
+      const res = await fetch(`${API_URL}/requisicoes/filter?${params.toString()}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user.token}`

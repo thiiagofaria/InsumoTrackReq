@@ -2,17 +2,23 @@ import React, { createContext, useState, useContext } from "react";
 
 const AuthContext = createContext();
 
+const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const login = async (email, password) => {
     // Faça a chamada ao endpoint de login
-    const res = await fetch("http://127.0.0.1:8000/auth/login", {
+    const res = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: email, password }),
     });
+
+    console.log("API_URL:", API_URL);
+
 
     if (!res.ok) {
       throw new Error("Falha no login");

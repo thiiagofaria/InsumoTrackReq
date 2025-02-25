@@ -2,6 +2,9 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
+const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+
+
 const UploadExcel = () => {
   const { user } = useAuth();
   const [selectedFile, setSelectedFile] = useState(null);
@@ -51,7 +54,7 @@ const UploadExcel = () => {
     formData.append("file", selectedFile);
 
     try {
-      const response = await fetch("http://localhost:8000/gerencial/upload-excel/", {
+      const response = await fetch(`${API_URL}/gerencial/upload-excel/`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${user.token}`,

@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import React from "react";
 
+const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+
+
 const CreateRequisicao = () => {
   const { user } = useAuth();
   console.log("Usuário autenticado:", user);
@@ -124,7 +127,7 @@ const CreateRequisicao = () => {
   // Buscar dados da obra
   useEffect(() => {
     if (!obraSelecionada) return;
-    fetch(`http://127.0.0.1:8000/obras/${obraSelecionada}`)
+    fetch(`${API_URL}/obras/${obraSelecionada}`)
       .then((res) => {
         if (!res.ok) {
           console.warn("Não encontrou a obra. Status:", res.status);
@@ -144,7 +147,7 @@ const CreateRequisicao = () => {
   // Buscar "Selecione o grupo de serviço" (antigo subgrupos2) – usando Classif.1 fixa
   useEffect(() => {
     if (!obraSelecionada) return;
-    fetch(`http://127.0.0.1:8000/gerencial/subgrupos2/${obraSelecionada}/${classificacaoFixa}`)
+    fetch(`${API_URL}/gerencial/subgrupos2/${obraSelecionada}/${classificacaoFixa}`)
       .then((res) => {
         if (!res.ok) {
           console.warn("Não encontrou subgrupos2. Status:", res.status);
@@ -164,7 +167,7 @@ const CreateRequisicao = () => {
 
   // Buscar empresas
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/empresas/")
+    fetch(`${API_URL}/empresas/`)
       .then((res) => {
         if (!res.ok) {
           console.warn("Erro ao buscar empresas. Status:", res.status);
@@ -184,7 +187,7 @@ const CreateRequisicao = () => {
 
   // Buscar locais de aplicação
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/locais-aplicacao/")
+    fetch(`${API_URL}/locais-aplicacao/`)
       .then((res) => {
         if (!res.ok) {
           console.warn("Erro ao buscar locais. Status:", res.status);
@@ -210,7 +213,7 @@ const CreateRequisicao = () => {
         try {
           // Buscar subgrupos3 para a obra com Classif.1 fixa e o grupo selecionado
           const resSubgrupo3 = await fetch(
-            `http://127.0.0.1:8000/gerencial/subgrupos3/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}`
+            `${API_URL}/gerencial/subgrupos3/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}`
           );
           if (!resSubgrupo3.ok) {
             setMateriais([]);
@@ -220,14 +223,14 @@ const CreateRequisicao = () => {
           // Para cada subgrupo3, buscar os serviços em paralelo
           const subgrupoPromises = subgrupos3.map(async (subgrupo3) => {
             const resServicos = await fetch(
-              `http://127.0.0.1:8000/gerencial/servicos/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}/${subgrupo3}`
+              `${API_URL}/gerencial/servicos/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}/${subgrupo3}`
             );
             if (!resServicos.ok) return [];
             const servicos = await resServicos.json();
             // Para cada serviço, buscar as descrições em paralelo
             const servicePromises = servicos.map(async (servico) => {
               const resDescricoes = await fetch(
-                `http://127.0.0.1:8000/gerencial/descricoes/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}/${subgrupo3}/${servico}`
+                `${API_URL}/gerencial/descricoes/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}/${subgrupo3}/${servico}`
               );
               if (!resDescricoes.ok) return [];
               const descricoes = await resDescricoes.json();
@@ -255,7 +258,7 @@ const CreateRequisicao = () => {
 
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/unidades/")
+    fetch(`${API_URL}/unidades/`)
       .then((res) => res.json())
       .then((data) => {
         console.log("Dados recebidos:", data);
@@ -369,7 +372,7 @@ const CreateRequisicao = () => {
     };
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/requisicoes/", {
+      const response = await fetch(`${API_URL}/requisicoes/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requisicaoPayload),
@@ -388,7 +391,7 @@ const CreateRequisicao = () => {
         ...item,
       }));
 
-      await fetch(`http://127.0.0.1:8000/requisicoes/${novaRequisicao.id}/itens`, {
+      await fetch(`${API_URL}/requisicoes/${novaRequisicao.id}/itens`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(itensPayload),

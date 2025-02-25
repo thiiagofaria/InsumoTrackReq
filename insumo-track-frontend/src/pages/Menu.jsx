@@ -1,6 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+
+
 const Menu = () => {
   // Estilos gerais
   const containerStyle = {
