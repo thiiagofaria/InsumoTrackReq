@@ -1,5 +1,5 @@
 # Fase 1: Construção do frontend com Node.js
-FROM node:18 AS build
+FROM node:20 AS build
 
 # Define o diretório de trabalho dentro do container
 WORKDIR /app
