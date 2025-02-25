@@ -1,31 +1,52 @@
-name: Deploy to AWS EC2
+name: Deploy with Rollback
 
 on:
   push:
     branches:
       - main
 
+env:
+  SSH_USER: ubuntu
+  BACKUP_IMAGE: insumotrackreq-backup
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout código
         uses: actions/checkout@v3
 
-      - name: Setup SSH and Deploy
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ubuntu
+      - name: Configurar SSH
         run: |
-          echo "$SSH_PRIVATE_KEY" > private_key.pem
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
           chmod 600 private_key.pem
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $EC2_USER@$EC2_HOST << 'EOF'
-            cd ~/InsumoTrackReq
-            git pull origin main
-            docker compose down
-            docker compose up --build -d
-            docker system prune -f
-          EOF
 
+      - name: Criar backup da versão atual
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker tag insumotrackreq-backend:latest $BACKUP_IMAGE || true"
+
+      - name: Parar containers antigos
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker compose down"
+
+      - name: Deploy nova versão
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "cd ~/InsumoTrackReq && docker compose up --build -d"
+
+      - name: Health Check do backend
+        run: |
+          sleep 10
+          if ! curl -sSf http://${{ secrets.EC2_HOST }}:8000/docs > /dev/null; then
+            echo "🚨 Deploy falhou! Iniciando rollback..."
+            ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker tag $BACKUP_IMAGE insumotrackreq-backend:latest"
+            ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker compose up -d"
+            exit 1
+          fi
+
+      - name: Remover backup após deploy bem-sucedido
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker rmi $BACKUP_IMAGE || true"
+
+      - name: Notificar sucesso
+        run: echo "🚀 Deploy concluído com sucesso!"
