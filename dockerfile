@@ -11,9 +11,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia todo o código para dentro do container
 COPY . .  
 
-# Comando para subir a API
-CMD ["sh", "-c", "cd /app/app && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
+# Definir a variável de ambiente para o Alembic encontrar o alembic.ini
+ENV PYTHONPATH="/app"
 
-
-
-
+# Comando para rodar as migrações e subir a API
+CMD ["sh", "-c", "cd app && alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"]
