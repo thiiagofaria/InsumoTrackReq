@@ -25,7 +25,12 @@ export const AuthProvider = ({ children }) => {
     }
     const data = await res.json();
     // Atualize o estado com os dados do usuário
-    setUser(data);
+    setUser({
+      name: data.nome, // O backend deve retornar um campo "nome"
+      obra: data.obra, // Já está correto
+      codigo_projeto: data.codigo_projeto, // Para buscar a obra corretamente
+      token: data.token
+    });
     setIsAuthenticated(true);
     // Se estiver retornando um token, salve-o (por exemplo, no state ou localStorage)
   };

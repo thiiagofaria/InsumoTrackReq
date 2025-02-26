@@ -1,26 +1,54 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
-
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Menu = () => {
-  // Estilos gerais
+  const { user } = useAuth();
+  const [obraNome, setObraNome] = useState("Carregando...");
+
+  useEffect(() => {
+    if (user?.codigo_projeto) {
+      fetch(`${API_URL}/obras/${user.codigo_projeto}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.nome) {
+            setObraNome(data.nome);
+          } else {
+            setObraNome("Não definida");
+          }
+        })
+        .catch(() => setObraNome("Erro ao carregar"));
+    } else {
+      setObraNome("Não definida");
+    }
+  }, [user]);
+
   const containerStyle = {
     width: "100vw",
-    height: "100vh",
+    minHeight: "100vh",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
+    paddingTop: "50px",
     backgroundColor: "#f9f9f9",
     fontFamily: "Arial, sans-serif",
   };
 
   const systemTitleStyle = {
     fontSize: "2rem",
-    marginBottom: "2rem",
+    marginBottom: "1rem",
     color: "#333",
+    textAlign: "center",
+  };
+
+  const userInfoStyle = {
+    fontSize: "1.2rem",
+    marginBottom: "1.5rem",
+    color: "#555",
+    textAlign: "center",
   };
 
   const cardStyle = {
@@ -59,6 +87,8 @@ const Menu = () => {
   return (
     <div style={containerStyle}>
       <h1 style={systemTitleStyle}>Sistema Gerenciador de Requisições</h1>
+      <p style={userInfoStyle}>Você está logado como: {user?.name || "Usuário"}</p>
+      <p style={userInfoStyle}>Obra: {obraNome}</p>
       <div style={cardStyle}>
         <h2 style={titleStyle}>Selecione uma opção</h2>
         <nav style={navStyle}>
