@@ -22,10 +22,10 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > private_key.pem
           chmod 600 private_key.pem
 
-
       - name: Criar backup da versão atual
         run: |
           ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker tag insumotrackreq-backend:latest $BACKUP_IMAGE || true"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker tag insumotrackreq-frontend:latest insumotrackreq-frontend-backup || true"
 
       - name: Parar containers antigos
         run: |
@@ -33,21 +33,20 @@ jobs:
 
       - name: Deploy nova versão
         run: |
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "cd ~/InsumoTrackReq && docker compose up --build -d"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "cd ~/InsumoTrackReq && docker compose build --no-cache && docker compose up -d"
 
-      - name: Health Check do backend
+      - name: Health Check do backend e frontend
         run: |
-          sleep 10
-          if ! curl -sSf http://${{ secrets.EC2_HOST }}:8000/docs > /dev/null; then
-            echo "🚨 Deploy falhou! Iniciando rollback..."
-            ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker tag $BACKUP_IMAGE insumotrackreq-backend:latest"
-            ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker compose up -d"
+          sleep 20
+          if ! curl -sSf http://${{ secrets.EC2_HOST }}:8000/docs > /dev/null || ! curl -sSf http://${{ secrets.EC2_HOST }} > /dev/null; then
+            echo "🚨 Deploy falhou! Verifique os logs."
             exit 1
           fi
 
       - name: Remover backup após deploy bem-sucedido
         run: |
           ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker rmi $BACKUP_IMAGE || true"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker rmi insumotrackreq-frontend-backup || true"
 
       - name: Notificar sucesso
         run: echo "🚀 Deploy concluído com sucesso!"
