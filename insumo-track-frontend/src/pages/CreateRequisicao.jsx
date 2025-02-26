@@ -2,66 +2,35 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import React from "react";
 
-const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
-
+const API_URL = import.meta.env.VITE_API_URL;
 
 const CreateRequisicao = () => {
   const { user } = useAuth();
   console.log("Usuário autenticado:", user);
-
-  // ======================
-  // Estados Gerais
-  // ======================
   const [dataProgramacaoSubida, setDataProgramacaoSubida] = useState("");
-
   const [nomeObra, setNomeObra] = useState("");
   const [novaRequisicaoCriada, setNovaRequisicaoCriada] = useState(null);
   const [mostrarResumo, setMostrarResumo] = useState(false);
-
-  // Obra selecionada (fixado com o código do projeto do usuário)
   const [obraSelecionada, setObraSelecionada] = useState(user?.codigo_projeto || "");
-  
-  // Valor fixo para Classif. 1 (não exibido)
   const classificacaoFixa = "CUSTOS DIRETOS DA OBRA";
-
-  // Seção Classificação
-  const [classificacoes2, setClassificacoes2] = useState([]); // "Selecione o grupo de serviço"
+  const [classificacoes2, setClassificacoes2] = useState([]);
   const [classificacao2Selecionada, setClassificacao2Selecionada] = useState("");
-  
   const [empresas, setEmpresas] = useState([]);
   const [empresaSelecionada, setEmpresaSelecionada] = useState("");
-  
   const [locais, setLocais] = useState([]);
   const [localSelecionado, setLocalSelecionado] = useState("");
-  
-  // Campo Observação (antigo Justificativa)
   const [justificativa, setJustificativa] = useState("");
-
   const [unidades, setUnidades] = useState([]);
-
-  // Flag para confirmar (travar) a seção de Classificação
   const [classificacaoConfirmada, setClassificacaoConfirmada] = useState(false);
-
-  // Seção Itens
-  // "Materiais" serão buscados com base no grupo de serviço (Classif.2)
-  // Cada material é representado como objeto: { descricao, subgrupo3, servico }
   const [materiais, setMateriais] = useState([]);
-  // O valor selecionado será armazenado como string JSON (para transportar o objeto)
   const [materialSelecionado, setMaterialSelecionado] = useState("");
   const [unidadeSelecionada, setUnidadeSelecionada] = useState("");
   const [quantidade, setQuantidade] = useState("");
-  
-  // Lista de itens adicionados
   const [itens, setItens] = useState([]);
-
-  // Constantes fixas para requisição
   const usuarioId = user?.id || null;
-  const statusId = 1; // 1 = pendente
+  const statusId = 1;
   const codigoProjetoPadrao = user?.codigo_projeto || "";
-
-  // ------------------------------
-  // Estilos em linha (mesmo padrão)
-  // ------------------------------
+  
   const containerStyle = {
     maxWidth: "900px",
     margin: "30px auto",
@@ -120,11 +89,6 @@ const CreateRequisicao = () => {
     backgroundColor: "#dc3545",
   };
 
-  // ========================================================
-  // Efeitos para buscar dados
-  // ========================================================
-
-  // Buscar dados da obra
   useEffect(() => {
     if (!obraSelecionada) return;
     fetch(`${API_URL}/obras/${obraSelecionada}`)
@@ -144,7 +108,6 @@ const CreateRequisicao = () => {
       });
   }, [obraSelecionada]);
 
-  // Buscar "Selecione o grupo de serviço" (antigo subgrupos2) – usando Classif.1 fixa
   useEffect(() => {
     if (!obraSelecionada) return;
     fetch(`${API_URL}/gerencial/subgrupos2/${obraSelecionada}/${classificacaoFixa}`)
@@ -165,7 +128,6 @@ const CreateRequisicao = () => {
       });
   }, [obraSelecionada, classificacaoFixa]);
 
-  // Buscar empresas
   useEffect(() => {
     fetch(`${API_URL}/empresas/`)
       .then((res) => {
@@ -185,7 +147,6 @@ const CreateRequisicao = () => {
       });
   }, []);
 
-  // Buscar locais de aplicação
   useEffect(() => {
     fetch(`${API_URL}/locais-aplicacao/`)
       .then((res) => {
@@ -205,13 +166,10 @@ const CreateRequisicao = () => {
       });
   }, []);
 
-  // Quando a seção de Classificação for confirmada e houver um grupo de serviço selecionado,
-  // buscar a lista de materiais utilizando Promise.all para executar as requisições em paralelo.
   useEffect(() => {
     if (classificacaoConfirmada && classificacao2Selecionada) {
       async function fetchMateriais() {
         try {
-          // Buscar subgrupos3 para a obra com Classif.1 fixa e o grupo selecionado
           const resSubgrupo3 = await fetch(
             `${API_URL}/gerencial/subgrupos3/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}`
           );
@@ -220,21 +178,18 @@ const CreateRequisicao = () => {
             return;
           }
           const subgrupos3 = await resSubgrupo3.json();
-          // Para cada subgrupo3, buscar os serviços em paralelo
           const subgrupoPromises = subgrupos3.map(async (subgrupo3) => {
             const resServicos = await fetch(
               `${API_URL}/gerencial/servicos/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}/${subgrupo3}`
             );
             if (!resServicos.ok) return [];
             const servicos = await resServicos.json();
-            // Para cada serviço, buscar as descrições em paralelo
             const servicePromises = servicos.map(async (servico) => {
               const resDescricoes = await fetch(
                 `${API_URL}/gerencial/descricoes/${obraSelecionada}/${classificacaoFixa}/${classificacao2Selecionada}/${subgrupo3}/${servico}`
               );
               if (!resDescricoes.ok) return [];
               const descricoes = await resDescricoes.json();
-              // Retorna um array de objetos para cada descrição
               return descricoes.map((descricao) => ({ descricao, subgrupo3, servico }));
             });
             const resultados = await Promise.all(servicePromises);
@@ -242,7 +197,6 @@ const CreateRequisicao = () => {
           });
           const materialsArrays = await Promise.all(subgrupoPromises);
           const materialList = materialsArrays.flat();
-          // Remover duplicatas
           const uniqueMaterials = Array.from(
             new Set(materialList.map((m) => JSON.stringify(m)))
           ).map((str) => JSON.parse(str));
@@ -272,12 +226,6 @@ const CreateRequisicao = () => {
       .catch((err) => console.error("Erro ao buscar unidades:", err));
   }, []);
   
-
-  // ========================================================
-  // Funções de Manipulação
-  // ========================================================
-
-  // Confirma a seção de Classificação (trava os campos e libera a próxima seção)
   const handleConfirmClassificacao = (e) => {
     e.preventDefault();
     if (!classificacao2Selecionada || classificacao2Selecionada.length < 3) {
@@ -292,7 +240,6 @@ const CreateRequisicao = () => {
     setClassificacaoConfirmada(true);
   };
 
-  // Volta para a seção de Classificação (limpa os itens adicionados)
   const handleVoltarClassificacao = () => {
     if (window.confirm("Ao voltar, os itens adicionados serão perdidos. Deseja continuar?")) {
       setClassificacaoConfirmada(false);
@@ -307,7 +254,6 @@ const CreateRequisicao = () => {
     }
   };
 
-  // Adiciona um item na seção Itens
   const handleAddItem = (e) => {
     e.preventDefault();
     if (!materialSelecionado) {
@@ -321,13 +267,13 @@ const CreateRequisicao = () => {
     }
     const novoItem = {
       subgrupo_1: classificacaoFixa,
-      subgrupo_2: classificacao2Selecionada, // Grupo de Serviço
+      subgrupo_2: classificacao2Selecionada,
       subgrupo_3: materialObj.subgrupo3,
       servico: materialObj.servico,
-      descricao: materialObj.descricao, // Material
+      descricao: materialObj.descricao,
       unidade_medida: unidadeSelecionada,
       quantidade_requisitada: parseFloat(quantidade),
-      local_aplicacao: localSelecionado, // vem da seção de Classificação
+      local_aplicacao: localSelecionado,
     };
 
     if (!novoItem.descricao || novoItem.descricao.length < 3) {
@@ -341,20 +287,17 @@ const CreateRequisicao = () => {
     }
 
     setItens([...itens, novoItem]);
-    // Limpa os campos da seção Itens para nova adição
     setMaterialSelecionado("");
     setUnidadeSelecionada("");
     setQuantidade("");
   };
 
-  // Remove item adicionado
   const handleRemoveItem = (index) => {
     const listaAtualizada = [...itens];
     listaAtualizada.splice(index, 1);
     setItens(listaAtualizada);
   };
 
-  // Cria a requisição e insere os itens
   const handleCreateRequisicao = async (e) => {
     e.preventDefault();
 
@@ -384,7 +327,7 @@ const CreateRequisicao = () => {
       }
 
       const novaRequisicao = await response.json();
-      console.log(`✅ Requisição criada com sucesso! ID: ${novaRequisicao.id}`);
+      console.log(`Requisição criada com sucesso! ID: ${novaRequisicao.id}`);
 
       const itensPayload = itens.map((item) => ({
         requisicao_id: novaRequisicao.id,
@@ -397,7 +340,6 @@ const CreateRequisicao = () => {
         body: JSON.stringify(itensPayload),
       });
 
-      // Incluindo data_criacao na requisição criada
       setNovaRequisicaoCriada({
         id: novaRequisicao.id,
         data_criacao: novaRequisicao.data_criacao,
@@ -412,7 +354,6 @@ const CreateRequisicao = () => {
       setMostrarResumo(desejaImprimir);
 
       if (!desejaImprimir) {
-        // Reset geral: todos os campos voltam ao valor inicial (dropdowns mostram "Selecione...")
         setClassificacaoConfirmada(false);
         setClassificacao2Selecionada("");
         setEmpresaSelecionada("");
@@ -425,7 +366,7 @@ const CreateRequisicao = () => {
         setItens([]);
       }
     } catch (error) {
-      console.error("❌ Erro ao criar requisição:", error);
+      console.error("Erro ao criar requisição:", error);
       alert(error.message || "Erro ao criar a requisição");
     }
   };
@@ -434,7 +375,6 @@ const CreateRequisicao = () => {
     window.print();
   };
 
-  // Ao selecionar "Nova Requisição" no resumo, todos os campos serão resetados para o estado inicial.
   const handleNovaRequisicao = () => {
     setClassificacaoConfirmada(false);
     setClassificacao2Selecionada("");
@@ -450,11 +390,6 @@ const CreateRequisicao = () => {
     setMostrarResumo(false);
   };
 
-  // ========================================================
-  // Renderização
-  // ========================================================
-
-  // Página de resumo para impressão
   if (mostrarResumo) {
     return (
       <div style={{ maxWidth: "900px", margin: "20px auto", fontFamily: "Arial, sans-serif", padding: "20px" }}>
@@ -521,8 +456,6 @@ const CreateRequisicao = () => {
       <h1 style={{ textAlign: "center", marginBottom: "1rem" }}>
         Nova Requisição {nomeObra ? `- ${nomeObra}` : ""}
       </h1>
-
-      {/* Seção Classificação */}
       <div style={cardStyle}>
         <h2 style={{ marginTop: 0 }}>Classificação</h2>
         <form onSubmit={handleConfirmClassificacao}>
@@ -598,11 +531,10 @@ const CreateRequisicao = () => {
               onChange={(e) => setDataProgramacaoSubida(e.target.value)}
               style={inputStyle}
               required
-              min={new Date().toISOString().split("T")[0]} // Apenas datas de hoje pra frente
-              disabled={classificacaoConfirmada} // <-- Adicionado para travar o campo
+              min={new Date().toISOString().split("T")[0]}
+              disabled={classificacaoConfirmada}
             />
           </div>
-          {/* Apenas o botão Confirmar nesta seção */}
           {!classificacaoConfirmada && (
             <div style={{ textAlign: "right" }}>
               <button type="submit" style={buttonStyle}>
@@ -613,11 +545,9 @@ const CreateRequisicao = () => {
         </form>
       </div>
 
-      {/* Seção Itens – só é exibida se a classificação estiver confirmada */}
       {classificacaoConfirmada && (
         <div style={cardStyle}>
           <h2 style={{ marginTop: 0 }}>Itens</h2>
-          {/* Botão Voltar para retornar à seção de Classificação */}
           <div style={{ textAlign: "right", marginBottom: "10px" }}>
             <button type="button" style={buttonStyle} onClick={handleVoltarClassificacao}>
               Voltar
@@ -674,7 +604,6 @@ const CreateRequisicao = () => {
               </div>
             </div>
           </form>
-          {/* Tabela de Itens Adicionados */}
           <div>
             <h3 style={{ marginTop: 0 }}>Itens Adicionados</h3>
             {itens.length === 0 ? (
@@ -713,7 +642,6 @@ const CreateRequisicao = () => {
         </div>
       )}
 
-      {/* Botão final para criar a requisição */}
       <div style={cardStyle}>
         <form onSubmit={handleCreateRequisicao}>
           <button type="submit" style={buttonStyle}>
