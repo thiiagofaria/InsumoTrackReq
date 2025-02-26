@@ -24,13 +24,21 @@ jobs:
 
       - name: Criar backup da versão atual
         run: |
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker tag insumotrackreq-backend:latest $BACKUP_IMAGE || true"
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker tag insumotrackreq-frontend:latest insumotrackreq-frontend-backup || true"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} \
+            "docker tag insumotrackreq-backend:latest $BACKUP_IMAGE || true"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} \
+            "docker tag insumotrackreq-frontend:latest insumotrackreq-frontend-backup || true"
 
       - name: Parar containers antigos
         run: |
           ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} \
             "cd ~/InsumoTrackReq && docker compose down"
+
+      # Opcional: limpa imagens e volumes não usados
+      - name: Limpar Docker
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} \
+            "docker system prune -af --volumes"
 
       - name: Atualizar repositório na EC2
         run: |
@@ -52,8 +60,10 @@ jobs:
 
       - name: Remover backup após deploy bem-sucedido
         run: |
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker rmi $BACKUP_IMAGE || true"
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} "docker rmi insumotrackreq-frontend-backup || true"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} \
+            "docker rmi $BACKUP_IMAGE || true"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USER@${{ secrets.EC2_HOST }} \
+            "docker rmi insumotrackreq-frontend-backup || true"
 
       - name: Notificar sucesso
         run: echo "Deploy concluído com sucesso!"
