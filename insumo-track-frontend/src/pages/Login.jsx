@@ -47,11 +47,11 @@ const Login = () => {
 
   const containerStyle = {
     width: "100vw",
-    height: "100vh",
+    minHeight: "100vh",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    justifyContent: "center",
+    paddingTop: "50px",
     backgroundColor: "#f9f9f9",
     fontFamily: "Arial, sans-serif",
   };
