@@ -19,10 +19,8 @@ load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-# Configuração do Passlib para segurança de senhas
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
-# Define o esquema OAuth2 para extração do token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def create_access_token(data: dict, expires_delta: datetime.timedelta = None):
@@ -38,7 +36,6 @@ def create_access_token(data: dict, expires_delta: datetime.timedelta = None):
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
-# Login de Usuário
 @router.post("/login", response_model=UsuarioResponse)
 def login(login_request: LoginRequest, db: Session = Depends(get_db)):
     print("Recebido:", login_request.username, login_request.password)
@@ -59,7 +56,6 @@ def login(login_request: LoginRequest, db: Session = Depends(get_db)):
             detail="Usuário ou senha inválidos"
         )
 
-    # Crie o token usando a função create_access_token (certifique-se de usar a mesma SECRET_KEY)
     access_token = create_access_token(data={"sub": str(user.id)})
 
     print(f"Usuário autenticado com sucesso! Obra associada: {user.codigo_projeto}")
@@ -75,12 +71,11 @@ def login(login_request: LoginRequest, db: Session = Depends(get_db)):
     )
 
 
-# Dependência para obter o usuário logado a partir do token JWT
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Usuario:
-    print("Token recebido:", token)  # Debug
+    print("Token recebido:", token) 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        print("Payload decodificado:", payload)  # Debug
+        print("Payload decodificado:", payload)  
         user_id: int = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")

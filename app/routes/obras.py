@@ -7,7 +7,6 @@ from app.schemas import ObraBase, ObraResponse
 
 router = APIRouter()
 
-# ✅ Criar uma nova obra
 @router.post("/obras/", response_model=ObraResponse)
 def create_obra(obra: ObraBase, db: Session = Depends(get_db)):
     """
@@ -19,7 +18,6 @@ def create_obra(obra: ObraBase, db: Session = Depends(get_db)):
     db.refresh(db_obra)
     return db_obra
 
-# ✅ Buscar todas as obras
 @router.get("/obras/", response_model=List[ObraResponse])
 def get_obras(db: Session = Depends(get_db)):
     """
@@ -27,7 +25,6 @@ def get_obras(db: Session = Depends(get_db)):
     """
     return db.query(Obra).all()
 
-# ✅ Buscar obra por código do projeto
 @router.get("/obras/{codigo_projeto}", response_model=ObraResponse)
 def get_obra_by_codigo(codigo_projeto: str, db: Session = Depends(get_db)):
     """
@@ -38,7 +35,6 @@ def get_obra_by_codigo(codigo_projeto: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Obra não encontrada")
     return obra
 
-# ✅ Atualizar uma obra pelo código do projeto
 @router.put("/obras/{codigo_projeto}", response_model=ObraResponse)
 def update_obra(codigo_projeto: str, obra: ObraBase, db: Session = Depends(get_db)):
     """
@@ -53,7 +49,6 @@ def update_obra(codigo_projeto: str, obra: ObraBase, db: Session = Depends(get_d
     db.refresh(db_obra)
     return db_obra
 
-# ✅ Deletar uma obra pelo código do projeto
 @router.delete("/obras/{codigo_projeto}")
 def delete_obra(codigo_projeto: str, db: Session = Depends(get_db)):
     """

@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import sys
 import os
 
-# Garante que o diretório raiz esteja no path do Python
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 app = FastAPI(title="InsumoTrackReq API")
@@ -24,7 +23,6 @@ app.include_router(unidades.router)
 def root():
     return {"message": "API InsumoTrackReq está rodando!"}
 
-# Defina quais origens serão permitidas
 origins = [
     "http://127.0.0.1:5173",
     "http://localhost:5173",

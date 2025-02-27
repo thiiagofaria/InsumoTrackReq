@@ -9,7 +9,6 @@ router = APIRouter(
 )
 
 
-# ✅ Criar um novo local de aplicação (CREATE)
 @router.post("/", response_model=schemas.LocalAplicacaoResponse)
 def criar_local_aplicacao(local_data: schemas.LocalAplicacaoBase, db: Session = Depends(get_db)):
     obra = db.query(models.Obra).filter(models.Obra.codigo_projeto == local_data.codigo_projeto).first()
@@ -25,13 +24,11 @@ def criar_local_aplicacao(local_data: schemas.LocalAplicacaoBase, db: Session = 
     return novo_local
 
 
-# ✅ Listar todos os locais de aplicação (READ)
 @router.get("/", response_model=list[schemas.LocalAplicacaoResponse])
 def listar_locais_aplicacao(db: Session = Depends(get_db)):
     return db.query(models.LocalAplicacao).all()
 
 
-# ✅ Buscar um local de aplicação por ID (READ)
 @router.get("/{local_id}", response_model=schemas.LocalAplicacaoResponse)
 def buscar_local_aplicacao(local_id: int, db: Session = Depends(get_db)):
     local = db.query(models.LocalAplicacao).filter(models.LocalAplicacao.id == local_id).first()
@@ -40,7 +37,6 @@ def buscar_local_aplicacao(local_id: int, db: Session = Depends(get_db)):
     return local
 
 
-# ✅ Atualizar um local de aplicação (UPDATE)
 @router.put("/{local_id}", response_model=schemas.LocalAplicacaoResponse)
 def atualizar_local_aplicacao(local_id: int, local_update: schemas.LocalAplicacaoBase, db: Session = Depends(get_db)):
     local = db.query(models.LocalAplicacao).filter(models.LocalAplicacao.id == local_id).first()
@@ -56,7 +52,6 @@ def atualizar_local_aplicacao(local_id: int, local_update: schemas.LocalAplicaca
     return local
 
 
-# ✅ Deletar um local de aplicação (DELETE)
 @router.delete("/{local_id}", response_model=dict)
 def deletar_local_aplicacao(local_id: int, db: Session = Depends(get_db)):
     local = db.query(models.LocalAplicacao).filter(models.LocalAplicacao.id == local_id).first()

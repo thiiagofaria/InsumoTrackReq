@@ -17,7 +17,6 @@ def listar_status(db: Session = Depends(get_db)):
     """
     status_list = db.query(models.StatusRequisicao).all()
     if not status_list:
-        # Se preferir retornar lista vazia ao invés de 404, basta remover este if.
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Nenhum status de requisição encontrado"

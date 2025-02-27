@@ -25,10 +25,10 @@ services:
     build:
       context: ./insumo-track-frontend
       args:
-        - VITE_API_URL=/api  # Define a URL relativa para as chamadas à API
+        - VITE_API_URL=/api  
     container_name: frontend
     ports:
-      - "80:80"  # Em produção, geralmente o Nginx escuta na porta 80
+      - "80:80"  
     environment:
       - VITE_API_URL=/api
     depends_on:

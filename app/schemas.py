@@ -2,8 +2,6 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime, date
 
-
-# SCHEMA PARA GERENCIAL OBRA
 class GerencialObraBase(BaseModel):
     data_fechamento: datetime
     codigo_projeto: str
@@ -50,7 +48,6 @@ class GerencialObraResponse(GerencialObraBase):
         from_attributes = True
 
 
-# SCHEMAS PARA BAIXA DE ITENS
 class BaixaItemRequisicaoBase(BaseModel):
     usuario_baixa_id: int = Field(..., description="ID do usuário que realizou a baixa")
     quantidade_baixada: float = Field(..., gt=0, description="Quantidade de itens baixados")
@@ -68,7 +65,6 @@ class BaixaItemRequisicaoResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# SCHEMAS PARA ITENS DA REQUISIÇÃO
 class ItensRequisicaoBase(BaseModel):
     subgrupo_1: str = Field(..., min_length=3, max_length=255)
     subgrupo_2: str = Field(..., min_length=3, max_length=255)
@@ -90,9 +86,6 @@ class ItensRequisicaoResponse(ItensRequisicaoBase):
     class Config:
         from_attributes = True
 
-
-
-# SCHEMAS PARA USUÁRIOS
 class UsuarioBase(BaseModel):
     nome: str
     email: str
@@ -133,7 +126,6 @@ class UsuarioCriadorResponse(BaseModel):
         from_attributes = True
 
 
-# SCHEMAS PARA EMPRESAS
 class EmpresaBase(BaseModel):
     nome: str
     cnpj: Optional[str] = None
@@ -155,7 +147,6 @@ class EmpresaResponseForRequisicao(BaseModel):
         from_attributes = True
 
 
-# SCHEMAS PARA STATUS DE REQUISIÇÃO
 class StatusRequisicaoBase(BaseModel):
     descricao: str
 
@@ -166,7 +157,6 @@ class StatusRequisicaoResponse(StatusRequisicaoBase):
         from_attributes = True
 
 
-# SCHEMAS PARA HISTÓRICO DE STATUS
 class HistoricoStatusRequisicaoBase(BaseModel):
     requisicao_id: int
     status_id: int
@@ -184,7 +174,6 @@ class HistoricoStatusRequisicaoResponse(HistoricoStatusRequisicaoBase):
         from_attributes = True
 
 
-# SCHEMAS PARA OBRAS E LOCAIS DE APLICAÇÃO
 class ObraBase(BaseModel):
     codigo_projeto: str
     nome: str
@@ -204,7 +193,6 @@ class LocalAplicacaoResponse(LocalAplicacaoBase):
         from_attributes = True
 
 
-# SCHEMA PARA AUTENTICAÇÃO
 class LoginRequest(BaseModel):
     username: str
     password: str
@@ -215,7 +203,6 @@ class AprovacaoRequisicao(BaseModel):
     observacao: Optional[str] = None
 
 
-# SCHEMAS PARA REQUISIÇÕES
 class RequisicaoBase(BaseModel):
     usuario_id: Optional[int] = None
     usuario_aprovador_id: Optional[int] = None

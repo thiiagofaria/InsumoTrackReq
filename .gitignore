@@ -1,12 +1,7 @@
-# Arquivos de cache do Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Extensões C
 *.so
-
-# Distribuição / Empacotamento
 .Python
 build/
 develop-eggs/
@@ -25,12 +20,8 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
-# Logs de instaladores
 pip-log.txt
 pip-delete-this-directory.txt
-
-# Relatórios de teste e cobertura
 htmlcov/
 .tox/
 .nox/
@@ -44,65 +35,31 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
-
-# Traduções
 *.mo
 *.pot
-
-# Arquivos de log
 *.log
-
-# Configurações locais
 local_settings.py
-
-# Bancos de dados locais
 db.sqlite3
 db.sqlite3-journal
-
-# Instâncias do Flask
 instance/
 .webassets-cache
-
-# Documentação do Sphinx
 docs/_build/
-
-# PyBuilder
 .pybuilder/
 target/
-
-# Jupyter Notebook
 .ipynb_checkpoints
-
-# IPython
 profile_default/
 ipython_config.py
-
-# pyenv
 .python-version
-
-# pipenv
 Pipfile.lock
-
-# poetry
 poetry.lock
-
-# pdm
 pdm.lock
 .pdm.toml
 .pdm-python
 .pdm-build/
-
-# PEP 582; usado por ferramentas como pyflow e pdm
 __pypackages__/
-
-# Celery
 celerybeat-schedule
 celerybeat.pid
-
-# SageMath
 *.sage.py
-
-# Ambientes virtuais
 .env
 .venv
 env/
@@ -110,39 +67,17 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
-# Configurações do Spyder
 .spyderproject
 .spyproject
-
-# Configurações do Rope
 .ropeproject
-
-# mkdocs
 /site
-
-# mypy
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
-# Pyre
 .pyre/
-
-# pytype
 .pytype/
-
-# Símbolos de depuração do Cython
 cython_debug/
-
-# PyCharm
 .idea/
-
-# Ruff
 .ruff_cache/
-
-# Configuração do PyPI
 .pypirc
-
-
 node_modules/

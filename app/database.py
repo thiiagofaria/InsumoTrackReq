@@ -5,11 +5,8 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 from fastapi import HTTPException
 
-
-# Carregar variáveis de ambiente do .env
 load_dotenv(override=True)
 
-# Obter credenciais do PostgreSQL
 DB_HOST = os.getenv("DB_HOST")
 DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
@@ -27,19 +24,17 @@ engine = create_engine(
     pool_pre_ping=True
 )
 
-# Criar sessão
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Função para obter a sessão do banco de dados
 def get_db():
     db = SessionLocal()
     try:
         yield db
-    except HTTPException:  # Se for erro HTTP, relança sem mexer
+    except HTTPException:  
         raise
-    except Exception as e:  # Se for realmente outro erro, trate aqui
-        raise RuntimeError(f"❌ ERRO na conexão com o banco: {e}") from e
+    except Exception as e:  
+        raise RuntimeError(f" ERRO na conexão com o banco: {e}") from e
     finally:
         db.close()
 

@@ -46,7 +46,6 @@ class GerencialObra(Base):
     descricao = Column(String(255), nullable=False)
     unidade_medida = Column(String(10), nullable=False)
 
-    # Valores financeiros e quantitativos
     orcamento_inicial_qtd = Column(Float, nullable=False)
     orcamento_inicial_valor = Column(Float, nullable=False)
     tendencia_anterior_qtd = Column(Float, nullable=False)
@@ -87,7 +86,6 @@ class Requisicao(Base):
     data_aprovacao = data_aprovacao = Column(DateTime, nullable=True)
     data_programacao_subida = Column(DateTime, nullable=True)
 
-    # Relacionamentos
     itens = relationship("ItensRequisicao", back_populates="requisicao", cascade="all, delete-orphan")
     empresa = relationship("Empresa", back_populates="requisicoes")
     usuario_criador = relationship("Usuario", back_populates="requisicoes_criadas", foreign_keys=[usuario_id])
@@ -127,7 +125,7 @@ class BaixaItemRequisicao(Base):
 
     item_requisicao = relationship("ItensRequisicao", back_populates="baixas")
     usuario_baixa = relationship("Usuario")
-    requisicao = relationship("Requisicao", backref="baixas")  # Adicionado para permitir acesso à empresa
+    requisicao = relationship("Requisicao", backref="baixas") 
 
 class Usuario(Base):
     __tablename__ = "usuarios"
@@ -140,7 +138,6 @@ class Usuario(Base):
     codigo_projeto = Column(String(50), ForeignKey("obras.codigo_projeto", ondelete="SET NULL"))
     ativo = Column(Boolean, default=True)
 
-    # Relacionamentos
     obra = relationship("Obra")
     requisicoes_criadas = relationship("Requisicao", back_populates="usuario_criador", foreign_keys=[Requisicao.usuario_id])
     requisicoes_aprovadas = relationship("Requisicao", back_populates="usuario_aprovador_rel", foreign_keys=[Requisicao.usuario_aprovador_id])
@@ -173,7 +170,6 @@ class Empresa(Base):
     telefone = Column(String(20), nullable=True)
     tipo_empresa = Column(String(50), nullable=True)
 
-    # Relacionamento com requisições
     requisicoes = relationship("Requisicao", back_populates="empresa")
 
 
