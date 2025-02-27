@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext } from "react";
 
 const AuthContext = createContext();
 
-const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 export const AuthProvider = ({ children }) => {
@@ -10,7 +10,6 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const login = async (email, password) => {
-    // Faça a chamada ao endpoint de login
     const res = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -24,9 +23,8 @@ export const AuthProvider = ({ children }) => {
       throw new Error("Falha no login");
     }
     const data = await res.json();
-    // Atualize o estado com os dados do usuário
     setUser({
-      id: data.id, // Adicionando o ID do usuário
+      id: data.id,
       name: data.nome,
       obra: data.obra,
       codigo_projeto: data.codigo_projeto,
@@ -34,7 +32,6 @@ export const AuthProvider = ({ children }) => {
     });
     
     setIsAuthenticated(true);
-    // Se estiver retornando um token, salve-o (por exemplo, no state ou localStorage)
   };
 
   const logout = () => {

@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 
 import Login from "./pages/Login";
-import Menu from "./pages/Menu"; // Página de menu com os botões
+import Menu from "./pages/Menu";
 import CreateRequisicao from "./pages/CreateRequisicao";
 import ApprovalRequisicao from "./pages/ApprovalRequisicao";
 import BaixaItensRequisicao from "./pages/BaixaItensRequisicao";
@@ -13,7 +13,7 @@ import VisualizarRequisicao from "./pages/VisualizarRequisicao";
 import FiltrarBaixas from "./pages/FiltrarBaixas";
 import PrivateRoute from "./components/PrivateRoute";
 
-const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 function App() {

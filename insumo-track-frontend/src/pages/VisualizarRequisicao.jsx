@@ -1,9 +1,8 @@
-// pages/VisualizarRequisicao.jsx
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 const VisualizarRequisicao = () => {
@@ -15,9 +14,6 @@ const VisualizarRequisicao = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ====================================
-  // Estilos
-  // ====================================
   const containerStyle = {
     maxWidth: "1000px",
     margin: "30px auto",
@@ -79,15 +75,11 @@ const VisualizarRequisicao = () => {
     textAlign: "left"
   };
 
-  // ====================================
-  // Buscar a requisição ao montar
-  // ====================================
   useEffect(() => {
     const reqId = searchParams.get("reqId");
     if (reqId) {
       fetchRequisicao(reqId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const fetchRequisicao = async (reqId) => {
@@ -113,16 +105,10 @@ const VisualizarRequisicao = () => {
     }
   };
 
-  // ====================================
-  // Voltar
-  // ====================================
   const handleVoltar = () => {
     navigate("/filtrar-requisicoes");
   };
 
-  // ====================================
-  // Renderização
-  // ====================================
   return (
     <div style={containerStyle}>
       <h1 style={titleStyle}>Visualizar Requisição</h1>

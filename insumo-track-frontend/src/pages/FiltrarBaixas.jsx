@@ -1,28 +1,22 @@
-// pages/FilterBaixas.jsx
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 function FilterBaixas() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Estados dos filtros
   const [requisicaoId, setRequisicaoId] = useState("");
   const [dataBaixaInicio, setDataBaixaInicio] = useState("");
   const [dataBaixaFim, setDataBaixaFim] = useState("");
 
-  // Estados para resultado, loading e erros
   const [baixas, setBaixas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ======================================================
-  // Estilos (baseados no FilterRequisicoes.jsx)
-  // ======================================================
   const containerStyle = {
     maxWidth: "1000px",
     margin: "30px auto",
@@ -99,16 +93,12 @@ function FilterBaixas() {
     padding: "8px"
   };
 
-  // ======================================================
-  // Função de Filtro
-  // ======================================================
   const handleFilter = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     setBaixas([]);
 
-    // Cria os parâmetros da query
     const params = new URLSearchParams();
     if (requisicaoId.trim() !== "") {
       params.append("requisicao_id", requisicaoId.trim());
@@ -140,14 +130,11 @@ function FilterBaixas() {
     }
   };
 
-  // ======================================================
-  // Renderização
-  // ======================================================
+
   return (
     <div style={containerStyle}>
       <h1 style={titleStyle}>Filtrar Baixas de Itens</h1>
 
-      {/* CARD DE FILTROS */}
       <div style={cardStyle}>
         <form onSubmit={handleFilter}>
           <div style={formRowStyle}>
@@ -192,11 +179,9 @@ function FilterBaixas() {
         </form>
       </div>
 
-      {/* Mensagens de Feedback */}
       {loading && <p style={{ fontStyle: "italic" }}>Carregando...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {/* Tabela de Resultados */}
       {baixas.length > 0 && (
         <div style={cardStyle}>
           <h2 style={{ marginTop: 0, marginBottom: "16px" }}>Baixas Encontradas</h2>
@@ -237,7 +222,6 @@ function FilterBaixas() {
         </div>
       )}
 
-      {/* Ação para voltar */}
       <div style={{ textAlign: "center", marginTop: "20px" }}>
         <button style={buttonStyle} onClick={() => navigate("/menu")}>
           Voltar

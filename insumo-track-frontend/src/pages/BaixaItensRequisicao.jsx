@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
-
+const API_URL = import.meta.env.VITE_API_URL;
 
 const BaixaItensRequisicao = () => {
   const { user } = useAuth();
@@ -12,14 +11,11 @@ const BaixaItensRequisicao = () => {
 
   const [reqId, setReqId] = useState("");
   const [requisicao, setRequisicao] = useState(null);
-  const [baixasInput, setBaixasInput] = useState({}); // { item_id: novaBaixa }
+  const [baixasInput, setBaixasInput] = useState({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resumo, setResumo] = useState(null); // exibe resumo da baixa
+  const [resumo, setResumo] = useState(null);
 
-  // ======================================================
-  // Estilos
-  // ======================================================
   const containerStyle = {
     maxWidth: "1000px",
     margin: "30px auto",
@@ -81,21 +77,15 @@ const BaixaItensRequisicao = () => {
     fontSize: "0.95rem"
   };
 
-  // ======================================================
-  // useEffect: pegar reqId da query string e buscar a requisição
-  // ======================================================
   useEffect(() => {
     const paramId = searchParams.get("reqId");
     if (paramId) {
       setReqId(paramId);
       handleBuscar(paramId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  // ======================================================
-  // Buscar a requisição
-  // ======================================================
+
   const handleBuscar = async (forcadoId = null) => {
     const idBusca = forcadoId || reqId;
     if (!idBusca) return;
@@ -118,7 +108,6 @@ const BaixaItensRequisicao = () => {
       }
       const data = await res.json();
 
-      // Permite somente requisições aprovadas (status_id = 2)
       if (data.status_id !== 2) {
         throw new Error(
           data.status_id === 1
@@ -134,9 +123,6 @@ const BaixaItensRequisicao = () => {
     }
   };
 
-  // ======================================================
-  // Calcula total baixado e saldo
-  // ======================================================
   const calcularBaixasESaldo = (item) => {
     const totalBaixado = item.baixas
       ? item.baixas.reduce((acc, baixa) => acc + baixa.quantidade_baixada, 0)
@@ -145,9 +131,7 @@ const BaixaItensRequisicao = () => {
     return { totalBaixado, saldoAtual };
   };
 
-  // ======================================================
-  // Atualiza o valor de nova baixa no estado
-  // ======================================================
+
   const handleInputBaixa = (itemId, value, saldoAtual) => {
     const novaBaixa = parseFloat(value);
     if (isNaN(novaBaixa) || novaBaixa < 0) return;
@@ -158,13 +142,10 @@ const BaixaItensRequisicao = () => {
     setBaixasInput({ ...baixasInput, [itemId]: novaBaixa });
   };
 
-  // ======================================================
-  // Realiza a baixa
-  // ======================================================
+
   const handleRealizarBaixa = async () => {
     if (!requisicao) return;
 
-    // Monta o payload com as baixas informadas (> 0)
     const payload = requisicao.itens
       .filter((item) => {
         const novaBaixa = baixasInput[item.id];
@@ -198,7 +179,6 @@ const BaixaItensRequisicao = () => {
         const errData = await res.json();
         throw new Error(errData.detail || "Erro ao realizar a baixa");
       }
-      // "result" é a lista dos itens baixados, cada um com data_baixa
       const result = await res.json();
       setResumo(result);
     } catch (e) {
@@ -208,16 +188,12 @@ const BaixaItensRequisicao = () => {
     }
   };
 
-  // ======================================================
-  // Voltar para a lista de requisições
-  // ======================================================
+
   const handleVoltar = () => {
     navigate("/filtrar-requisicoes");
   };
 
-  // ======================================================
-  // Renderiza o resumo para impressão
-  // ======================================================
+
   const renderResumoImpressao = () => {
     const itensResumo = resumo.map((baixa) => {
       const itemEncontrado = requisicao.itens.find(
@@ -286,22 +262,16 @@ const BaixaItensRequisicao = () => {
     );
   };
 
-  // ======================================================
-  // Render principal
-  // ======================================================
+
   return (
     <div style={containerStyle}>
       <h1 style={titleStyle}>Baixa de Itens da Requisição</h1>
 
       {loading && <p style={{ fontStyle: "italic" }}>Carregando...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {/* Se a requisição não está carregada e não há erro, exibimos um aviso */}
       {!requisicao && !loading && !error && (
         <p>Nenhuma requisição carregada. Volte e selecione uma requisição.</p>
       )}
-
-      {/* Se houver resumo, mostra a tela de impressão */}
       {resumo ? (
         <div style={cardStyle}>
           {renderResumoImpressao()}
@@ -318,7 +288,6 @@ const BaixaItensRequisicao = () => {
           </div>
         </div>
       ) : (
-        // Senão, exibe a tela normal de baixa
         requisicao && (
           <div style={cardStyle}>
             <button onClick={handleVoltar} style={buttonStyle}>

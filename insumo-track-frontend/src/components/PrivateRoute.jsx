@@ -1,9 +1,8 @@
-// components/PrivateRoute.jsx
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 const PrivateRoute = ({ children }) => {

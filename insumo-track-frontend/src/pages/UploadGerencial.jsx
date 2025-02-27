@@ -1,8 +1,7 @@
-// pages/UploadExcel.jsx
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
-const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 const UploadExcel = () => {

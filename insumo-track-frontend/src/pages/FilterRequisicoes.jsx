@@ -1,20 +1,17 @@
-// pages/FilterRequisicoes.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 function FilterRequisicoes() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Estados para listas (empresas e status) carregadas do backend
   const [empresas, setEmpresas] = useState([]);
   const [listaStatus, setListaStatus] = useState([]);
 
-  // Filtros que o usuário digita ou seleciona
   const [numeroRequisicao, setNumeroRequisicao] = useState("");
   const [dataCriacaoInicio, setDataCriacaoInicio] = useState("");
   const [dataCriacaoFim, setDataCriacaoFim] = useState("");
@@ -23,14 +20,10 @@ function FilterRequisicoes() {
   const [dataProgSubidaInicio, setDataProgSubidaInicio] = useState("");
   const [dataProgSubidaFim, setDataProgSubidaFim] = useState("");
 
-  // Estado para resultado, loading e erros
   const [requisicoes, setRequisicoes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ======================================================
-  // Estilos
-  // ======================================================
   const containerStyle = {
     maxWidth: "1000px",
     margin: "30px auto",
@@ -107,7 +100,6 @@ function FilterRequisicoes() {
     padding: "8px"
   };
 
-  // Ações
   const actionButtonContainer = { display: "flex", gap: "8px" };
   const actionButtonBase = {
     padding: "6px 12px",
@@ -136,13 +128,9 @@ function FilterRequisicoes() {
     color: "#000"
   };
 
-  // ======================================================
-  // Efeitos: Carregar empresas e status
-  // ======================================================
   useEffect(() => {
     if (!user?.token) return;
 
-    // Buscar empresas
     fetch(`${API_URL}/empresas`, {
       headers: {
         "Content-Type": "application/json",
@@ -156,7 +144,6 @@ function FilterRequisicoes() {
       .then((data) => setEmpresas(data))
       .catch((err) => console.error("Erro ao buscar empresas:", err));
 
-    // Buscar lista de status
     fetch(`${API_URL}/status-requisicao`, {
       headers: {
         "Content-Type": "application/json",
@@ -171,16 +158,12 @@ function FilterRequisicoes() {
       .catch((err) => console.error("Erro ao buscar status:", err));
   }, [user?.token]);
 
-  // ======================================================
-  // Função de Filtro
-  // ======================================================
   const handleFilter = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     setRequisicoes([]);
 
-    // Cria os parâmetros da query
     const params = new URLSearchParams();
 
     if (numeroRequisicao.trim() !== "") {
@@ -226,9 +209,6 @@ function FilterRequisicoes() {
     }
   };
 
-  // ======================================================
-  // Ações de Navegação
-  // ======================================================
   const handleBaixarClick = (reqId) => {
     navigate(`/baixa-itens?reqId=${reqId}`);
   };
@@ -241,7 +221,6 @@ function FilterRequisicoes() {
     <div style={containerStyle}>
       <h1 style={titleStyle}>Filtrar Requisições</h1>
 
-      {/* CARD DE FILTROS */}
       <div style={cardStyle}>
         <form onSubmit={handleFilter}>
           <div style={formRowStyle}>
@@ -340,11 +319,9 @@ function FilterRequisicoes() {
         </form>
       </div>
 
-      {/* MENSAGENS DE FEEDBACK */}
       {loading && <p style={{ fontStyle: "italic" }}>Carregando...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {/* TABELA DE RESULTADOS */}
       {requisicoes.length > 0 && (
         <div style={cardStyle}>
           <h2 style={{ marginTop: 0, marginBottom: "16px" }}>Requisições Encontradas</h2>
@@ -364,7 +341,6 @@ function FilterRequisicoes() {
               {requisicoes.map((req, index) => (
                 <tr
                   key={req.id}
-                  // Zebra stripes: cor de fundo diferente para linhas pares e ímpares
                   style={{
                     backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#ffffff"
                   }}

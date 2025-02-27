@@ -1,9 +1,8 @@
-// pages/ApprovalRequisicao.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL; // Pega do .env
+const API_URL = import.meta.env.VITE_API_URL;
 
 const ApprovalRequisicao = () => {
   const { user } = useAuth();
@@ -15,9 +14,7 @@ const ApprovalRequisicao = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ================================
-  // Estilos
-  // ================================
+
   const containerStyle = {
     maxWidth: "1000px",
     margin: "30px auto",
@@ -89,9 +86,6 @@ const ApprovalRequisicao = () => {
     marginTop: "6px"
   };
 
-  // ================================
-  // useEffect: busca a requisição
-  // ================================
   useEffect(() => {
     const reqId = searchParams.get("reqId");
     if (reqId) {
@@ -99,9 +93,6 @@ const ApprovalRequisicao = () => {
     }
   }, [searchParams]);
 
-  // ================================
-  // Função para buscar requisição
-  // ================================
   const handleBuscar = async (reqId) => {
     setLoading(true);
     setError("");
@@ -129,9 +120,6 @@ const ApprovalRequisicao = () => {
     }
   };
 
-  // ================================
-  // Aprovar / Reprovar
-  // ================================
   const handleAprovacao = async (aprovado) => {
     if (requisicao.status_id !== 1) return;
     setLoading(true);
@@ -161,9 +149,6 @@ const ApprovalRequisicao = () => {
     }
   };
 
-  // ================================
-  // Render
-  // ================================
   return (
     <div style={containerStyle}>
       <h1 style={titleStyle}>Aprovação de Requisições</h1>
