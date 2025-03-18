@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Usuario
-from app.schemas import UsuarioCreate, UsuarioResponse
+from app.schemas import UsuarioCreate, UsuarioResponse, UsuarioUpdate  
 from passlib.context import CryptContext
 
 router = APIRouter(prefix="/usuarios", tags=["Usuários"])
@@ -51,16 +51,21 @@ def obter_usuario(usuario_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{usuario_id}", response_model=UsuarioResponse)
-def atualizar_usuario(usuario_id: int, usuario_atualizado: UsuarioCreate, db: Session = Depends(get_db)):
-    """Atualiza os dados de um usuário"""
+def atualizar_usuario(usuario_id: int, usuario_atualizado: UsuarioUpdate, db: Session = Depends(get_db)):
     usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado!")
-
-    usuario.nome = usuario_atualizado.nome
-    usuario.email = usuario_atualizado.email
-    usuario.cargo = usuario_atualizado.cargo
-    usuario.senha_hash = get_password_hash(usuario_atualizado.senha)
+    
+    if usuario_atualizado.nome is not None:
+         usuario.nome = usuario_atualizado.nome
+    if usuario_atualizado.email is not None:
+         usuario.email = usuario_atualizado.email
+    if usuario_atualizado.cargo is not None:
+         usuario.cargo = usuario_atualizado.cargo
+    if usuario_atualizado.senha:
+         usuario.senha_hash = get_password_hash(usuario_atualizado.senha)
+    if usuario_atualizado.codigo_projeto is not None:
+         usuario.codigo_projeto = usuario_atualizado.codigo_projeto
 
     db.commit()
     db.refresh(usuario)

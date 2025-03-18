@@ -98,16 +98,31 @@ const ManageUsuarios = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!nome || !email || (!senha && !isEditing)) {
-      return alert("Preencha os campos obrigatórios: Nome, Email e Senha.");
+    // Nome e email são obrigatórios
+    if (!nome || !email) {
+      return alert("Preencha os campos obrigatórios: Nome e Email.");
     }
+    // Na criação, a senha é obrigatória.
+    if (!isEditing && !senha) {
+      return alert("Preencha o campo de senha para criar o usuário.");
+    }
+
+    // Monta o payload com os dados que serão enviados
     const payload = {
       nome,
       email,
       cargo,
-      senha,
       codigo_projeto: codigoProjeto,
     };
+
+    // Se estiver criando ou se estiver editando e uma nova senha for informada, inclua o campo senha
+    if (!isEditing || (isEditing && senha.trim() !== "")) {
+      payload.senha = senha;
+    }
+    // Caso esteja editando e a senha esteja vazia, NÃO inclua o campo senha no payload,
+    // para que o backend não tente atualizar a senha com valor vazio.
+    // IMPORTANTE: o backend deve ser ajustado para permitir atualizações parciais,
+    // isto é, não exigir o campo "senha" quando não for alterado.
 
     try {
       let response;
@@ -134,7 +149,7 @@ const ManageUsuarios = () => {
 
       await response.json();
       fetchUsuarios();
-      // Limpa o formulário
+      // Limpa o formulário e reinicia o modo de edição
       setNome("");
       setEmail("");
       setCargo("");
@@ -152,7 +167,7 @@ const ManageUsuarios = () => {
     setNome(usuario.nome);
     setEmail(usuario.email);
     setCargo(usuario.cargo || "");
-    // Em edição, a senha deverá ser reinformada, se necessário
+    // Por segurança, não pré-preenche a senha
     setSenha("");
     setCodigoProjeto(usuario.codigo_projeto || "");
     setIsEditing(true);

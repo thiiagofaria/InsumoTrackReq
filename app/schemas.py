@@ -126,6 +126,14 @@ class UsuarioCriadorResponse(BaseModel):
         from_attributes = True
 
 
+class UsuarioUpdate(BaseModel):
+    nome: Optional[str] = None
+    email: Optional[str] = None
+    cargo: Optional[str] = None
+    senha: Optional[str] = None
+    codigo_projeto: Optional[str] = None
+
+
 class EmpresaBase(BaseModel):
     nome: str
     cnpj: Optional[str] = None
