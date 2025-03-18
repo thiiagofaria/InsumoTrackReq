@@ -12,6 +12,7 @@ import UploadGerencial from "./pages/UploadGerencial";
 import VisualizarRequisicao from "./pages/VisualizarRequisicao";
 import FiltrarBaixas from "./pages/FiltrarBaixas";
 import PrivateRoute from "./components/PrivateRoute";
+import AlterUser from "./pages/AlterUser";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -82,6 +83,14 @@ function App() {
           element={
             <PrivateRoute>
               <VisualizarRequisicao />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/alterar-usuarios"
+          element={
+            <PrivateRoute>
+              <AlterUser />
             </PrivateRoute>
           }
         />
