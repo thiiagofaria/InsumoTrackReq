@@ -11,11 +11,6 @@ services:
       - .env
     command: ["sh", "-c", "cd app && alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"]
     restart: always
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000"]
-      interval: 10s
-      retries: 5
-      timeout: 5s
     ports:
       - "8000:8000"
 
